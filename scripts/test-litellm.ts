@@ -108,21 +108,21 @@ async function testLiteLLM() {
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log(`⚠ Local model not available (${response.status})`);
-      console.log(`  This is expected if Ollama is not running`);
-      console.log(`  Error: ${errorText.slice(0, 100)}`);
-    } else {
+    if (response.ok) {
       const data = (await response.json()) as ChatResponse;
       console.log('✓ Local model working');
       console.log(`  Response: "${data.choices?.[0]?.message?.content?.trim()}"`);
       if (data.usage) {
         console.log(`  Tokens: ${data.usage.total_tokens}`);
       }
+    } else {
+      const errorText = await response.text();
+      console.log(`⚠ Local model not available (${response.status})`);
+      console.log('  This is expected if Ollama is not running');
+      console.log(`  Error: ${errorText.slice(0, 100)}`);
     }
     console.log('');
-  } catch (error) {
+  } catch (_error) {
     console.log('⚠ Local model test skipped (Ollama may not be running)');
     console.log('');
   }
@@ -141,7 +141,7 @@ async function testLiteLLM() {
       console.log('⚠ Model info endpoint returned:', response.status);
     }
     console.log('');
-  } catch (error) {
+  } catch (_error) {
     console.log('⚠ Could not fetch model info');
   }
 

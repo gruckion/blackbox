@@ -3,31 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "description": "Nightly CI for coding agents: capture, replay, improve, and ship rule changes",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
   "scripts": {
-    "build": "pnpm -r build",
-    "test": "pnpm -r test",
-    "test:integration": "vitest run tests/",
-    "typecheck": "pnpm -r typecheck",
-    "lint": "eslint packages/*/src/**/*.ts",
-    "lint:fix": "eslint packages/*/src/**/*.ts --fix",
-    "format": "prettier --write \"packages/*/src/**/*.ts\"",
-    "clean": "pnpm -r clean",
-    "dev": "pnpm -r --parallel dev",
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "test:integration": "bun vitest run tests/",
+    "typecheck": "bun run --filter '*' typecheck",
+    "check": "bun x ultracite check",
+    "check:fix": "bun x ultracite fix --unsafe",
+    "clean": "bun run --filter '*' clean",
+    "dev": "bun run --parallel --filter '*' dev",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "prepare": "lefthook install"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.11",
     "@types/node": "^20.10.0",
+    "lefthook": "^2.0.15",
     "typescript": "^5.3.0",
-    "eslint": "^8.55.0",
-    "@typescript-eslint/eslint-plugin": "^6.13.0",
-    "@typescript-eslint/parser": "^6.13.0",
-    "prettier": "^3.1.0",
+    "ultracite": "7.0.12",
     "vitest": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
+    "bun": ">=1.0.0"
   }
 }

@@ -3,14 +3,14 @@
  * Analyzes traces to identify improvement opportunities
  */
 
-import type { Trace, LoopPattern } from '@blackbox/shared';
 import type { PipelineResult } from '@blackbox/evaluate';
+import type { LoopPattern, Trace } from '@blackbox/shared';
 import type {
-  ImprovementAnalysis,
   FailurePattern,
-  RuleViolation,
+  ImprovementAnalysis,
   ImprovementOpportunity,
   RulesFile,
+  RuleViolation,
 } from './types.js';
 
 // Internal type for evaluator loop patterns before conversion
@@ -32,11 +32,7 @@ export function analyzeTraces(
   const failurePatterns = findFailurePatterns(traces, evaluations);
   const loopPatterns = findLoopPatterns(evaluations);
   const ruleViolations = findRuleViolations(traces, rules);
-  const opportunities = generateOpportunities(
-    failurePatterns,
-    loopPatterns,
-    ruleViolations
-  );
+  const opportunities = generateOpportunities(failurePatterns, loopPatterns, ruleViolations);
 
   return {
     traceCount: traces.length,
@@ -50,10 +46,7 @@ export function analyzeTraces(
 /**
  * Find common failure patterns
  */
-function findFailurePatterns(
-  traces: Trace[],
-  evaluations: PipelineResult[]
-): FailurePattern[] {
+function findFailurePatterns(traces: Trace[], evaluations: PipelineResult[]): FailurePattern[] {
   const patterns: FailurePattern[] = [];
 
   // Group traces by outcome
@@ -61,7 +54,7 @@ function findFailurePatterns(
   const lowQualityTraces: string[] = [];
 
   for (const evaluation of evaluations) {
-    if (evaluation.aggregateScores['overall'] < 0.5) {
+    if (evaluation.aggregateScores.overall < 0.5) {
       lowQualityTraces.push(evaluation.traceId);
     }
   }
@@ -107,15 +100,15 @@ function findFailurePatterns(
 function mapLoopType(type: string): LoopPattern['type'] {
   const typeMap: Record<string, LoopPattern['type']> = {
     'repeated-tool-call': 'repeated-tool-call',
-    'oscillation': 'oscillation',
+    oscillation: 'oscillation',
     'excessive-self-critique': 'excessive-self-critique',
     'stalled-retrieval': 'stalled-retrieval',
     'circular-reasoning': 'circular-reasoning',
     // Map common variations
-    'repeated_tool_call': 'repeated-tool-call',
+    repeated_tool_call: 'repeated-tool-call',
     'repeated-calls': 'repeated-tool-call',
-    'stuck': 'stalled-retrieval',
-    'loop': 'circular-reasoning',
+    stuck: 'stalled-retrieval',
+    loop: 'circular-reasoning',
   };
   return typeMap[type] || 'circular-reasoning';
 }
@@ -127,9 +120,7 @@ function findLoopPatterns(evaluations: PipelineResult[]): LoopPattern[] {
   const allPatterns: EvaluatorLoopPattern[] = [];
 
   for (const evaluation of evaluations) {
-    const loopResult = evaluation.results.find(
-      (r) => r.evaluatorName === 'loop-detector'
-    );
+    const loopResult = evaluation.results.find((r) => r.evaluatorName === 'loop-detector');
 
     if (loopResult) {
       for (const score of loopResult.scores) {
@@ -157,12 +148,14 @@ function findLoopPatterns(evaluations: PipelineResult[]): LoopPattern[] {
   }
 
   // Convert evaluator patterns to shared LoopPattern format
-  return Array.from(patternMap.values()).map((p): LoopPattern => ({
-    type: mapLoopType(p.type),
-    description: p.description,
-    occurrences: p.count,
-    traceIds: p.callIds, // callIds serve as trace/call identifiers
-  }));
+  return Array.from(patternMap.values()).map(
+    (p): LoopPattern => ({
+      type: mapLoopType(p.type),
+      description: p.description,
+      occurrences: p.count,
+      traceIds: p.callIds, // callIds serve as trace/call identifiers
+    })
+  );
 }
 
 /**
@@ -178,13 +171,14 @@ function findRuleViolations(traces: Trace[], rules: RulesFile): RuleViolation[] 
     for (const trace of traces) {
       // Check if any response might violate the rule
       // This is a very rough heuristic based on keyword matching
-      const ruleKeywords = rule.content.toLowerCase().split(/\s+/).filter((w) => w.length > 4);
+      const ruleKeywords = rule.content
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((w) => w.length > 4);
 
       for (const call of trace.calls) {
         const content =
-          typeof call.response.content === 'string'
-            ? call.response.content.toLowerCase()
-            : '';
+          typeof call.response.content === 'string' ? call.response.content.toLowerCase() : '';
 
         // Check if response seems to contradict rule
         const containsNegation = /\b(don't|not|never|shouldn't|won't)\b/.test(content);
@@ -289,7 +283,9 @@ export function getAnalysisSummary(analysis: ImprovementAnalysis): string {
   if (analysis.failurePatterns.length > 0) {
     lines.push(`Failure Patterns: ${analysis.failurePatterns.length}`);
     for (const pattern of analysis.failurePatterns) {
-      lines.push(`  - ${pattern.type}: ${pattern.description} (${(pattern.frequency * 100).toFixed(1)}%)`);
+      lines.push(
+        `  - ${pattern.type}: ${pattern.description} (${(pattern.frequency * 100).toFixed(1)}%)`
+      );
     }
     lines.push('');
   }

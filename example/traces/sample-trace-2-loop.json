@@ -26,18 +26,33 @@
           "function": {
             "name": "read_file",
             "description": "Read a file",
-            "parameters": { "type": "object", "properties": { "path": { "type": "string" } }, "required": ["path"] }
+            "parameters": {
+              "type": "object",
+              "properties": { "path": { "type": "string" } },
+              "required": ["path"]
+            }
           }
         }
       ],
       "response": {
         "content": "Let me read the file first.",
         "toolCalls": [
-          { "id": "tc-loop-001", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }
+          {
+            "id": "tc-loop-001",
+            "type": "function",
+            "function": {
+              "name": "read_file",
+              "arguments": "{\"path\": \"counter.js\"}"
+            }
+          }
         ],
         "finishReason": "tool_calls"
       },
-      "usage": { "promptTokens": 100, "completionTokens": 30, "totalTokens": 130 },
+      "usage": {
+        "promptTokens": 100,
+        "completionTokens": 30,
+        "totalTokens": 130
+      },
       "latency": 800
     },
     {
@@ -47,18 +62,49 @@
       "provider": "openai",
       "messages": [
         { "role": "system", "content": "You are a coding assistant." },
-        { "role": "user", "content": "Fix the bug in counter.js where it loops forever" },
-        { "role": "assistant", "content": "Let me read the file first.", "tool_calls": [{ "id": "tc-loop-001", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-001", "content": "let i = 0; while(true) { console.log(i); }" }
+        {
+          "role": "user",
+          "content": "Fix the bug in counter.js where it loops forever"
+        },
+        {
+          "role": "assistant",
+          "content": "Let me read the file first.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-001",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-001",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        }
       ],
       "response": {
         "content": "I see the issue. Let me read it again to make sure.",
         "toolCalls": [
-          { "id": "tc-loop-002", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }
+          {
+            "id": "tc-loop-002",
+            "type": "function",
+            "function": {
+              "name": "read_file",
+              "arguments": "{\"path\": \"counter.js\"}"
+            }
+          }
         ],
         "finishReason": "tool_calls"
       },
-      "usage": { "promptTokens": 150, "completionTokens": 35, "totalTokens": 185 },
+      "usage": {
+        "promptTokens": 150,
+        "completionTokens": 35,
+        "totalTokens": 185
+      },
       "latency": 750
     },
     {
@@ -68,20 +114,68 @@
       "provider": "openai",
       "messages": [
         { "role": "system", "content": "You are a coding assistant." },
-        { "role": "user", "content": "Fix the bug in counter.js where it loops forever" },
-        { "role": "assistant", "content": "Let me read the file first.", "tool_calls": [{ "id": "tc-loop-001", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-001", "content": "let i = 0; while(true) { console.log(i); }" },
-        { "role": "assistant", "content": "I see the issue. Let me read it again to make sure.", "tool_calls": [{ "id": "tc-loop-002", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-002", "content": "let i = 0; while(true) { console.log(i); }" }
+        {
+          "role": "user",
+          "content": "Fix the bug in counter.js where it loops forever"
+        },
+        {
+          "role": "assistant",
+          "content": "Let me read the file first.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-001",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-001",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        },
+        {
+          "role": "assistant",
+          "content": "I see the issue. Let me read it again to make sure.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-002",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-002",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        }
       ],
       "response": {
         "content": "Let me check the file one more time.",
         "toolCalls": [
-          { "id": "tc-loop-003", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }
+          {
+            "id": "tc-loop-003",
+            "type": "function",
+            "function": {
+              "name": "read_file",
+              "arguments": "{\"path\": \"counter.js\"}"
+            }
+          }
         ],
         "finishReason": "tool_calls"
       },
-      "usage": { "promptTokens": 200, "completionTokens": 35, "totalTokens": 235 },
+      "usage": {
+        "promptTokens": 200,
+        "completionTokens": 35,
+        "totalTokens": 235
+      },
       "latency": 780
     },
     {
@@ -91,30 +185,119 @@
       "provider": "openai",
       "messages": [
         { "role": "system", "content": "You are a coding assistant." },
-        { "role": "user", "content": "Fix the bug in counter.js where it loops forever" },
-        { "role": "assistant", "content": "Let me read the file first.", "tool_calls": [{ "id": "tc-loop-001", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-001", "content": "let i = 0; while(true) { console.log(i); }" },
-        { "role": "assistant", "content": "I see the issue. Let me read it again to make sure.", "tool_calls": [{ "id": "tc-loop-002", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-002", "content": "let i = 0; while(true) { console.log(i); }" },
-        { "role": "assistant", "content": "Let me check the file one more time.", "tool_calls": [{ "id": "tc-loop-003", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }] },
-        { "role": "tool", "tool_call_id": "tc-loop-003", "content": "let i = 0; while(true) { console.log(i); }" }
+        {
+          "role": "user",
+          "content": "Fix the bug in counter.js where it loops forever"
+        },
+        {
+          "role": "assistant",
+          "content": "Let me read the file first.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-001",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-001",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        },
+        {
+          "role": "assistant",
+          "content": "I see the issue. Let me read it again to make sure.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-002",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-002",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        },
+        {
+          "role": "assistant",
+          "content": "Let me check the file one more time.",
+          "tool_calls": [
+            {
+              "id": "tc-loop-003",
+              "type": "function",
+              "function": {
+                "name": "read_file",
+                "arguments": "{\"path\": \"counter.js\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-loop-003",
+          "content": "let i = 0; while(true) { console.log(i); }"
+        }
       ],
       "response": {
         "content": "I need to read the file again to understand the issue better.",
         "toolCalls": [
-          { "id": "tc-loop-004", "type": "function", "function": { "name": "read_file", "arguments": "{\"path\": \"counter.js\"}" } }
+          {
+            "id": "tc-loop-004",
+            "type": "function",
+            "function": {
+              "name": "read_file",
+              "arguments": "{\"path\": \"counter.js\"}"
+            }
+          }
         ],
         "finishReason": "tool_calls"
       },
-      "usage": { "promptTokens": 280, "completionTokens": 35, "totalTokens": 315 },
+      "usage": {
+        "promptTokens": 280,
+        "completionTokens": 35,
+        "totalTokens": 315
+      },
       "latency": 820
     }
   ],
   "toolResults": [
-    { "toolCallId": "tc-loop-001", "toolName": "read_file", "input": { "path": "counter.js" }, "output": "let i = 0; while(true) { console.log(i); }", "duration": 20 },
-    { "toolCallId": "tc-loop-002", "toolName": "read_file", "input": { "path": "counter.js" }, "output": "let i = 0; while(true) { console.log(i); }", "duration": 18 },
-    { "toolCallId": "tc-loop-003", "toolName": "read_file", "input": { "path": "counter.js" }, "output": "let i = 0; while(true) { console.log(i); }", "duration": 22 },
-    { "toolCallId": "tc-loop-004", "toolName": "read_file", "input": { "path": "counter.js" }, "output": "let i = 0; while(true) { console.log(i); }", "duration": 19 }
+    {
+      "toolCallId": "tc-loop-001",
+      "toolName": "read_file",
+      "input": { "path": "counter.js" },
+      "output": "let i = 0; while(true) { console.log(i); }",
+      "duration": 20
+    },
+    {
+      "toolCallId": "tc-loop-002",
+      "toolName": "read_file",
+      "input": { "path": "counter.js" },
+      "output": "let i = 0; while(true) { console.log(i); }",
+      "duration": 18
+    },
+    {
+      "toolCallId": "tc-loop-003",
+      "toolName": "read_file",
+      "input": { "path": "counter.js" },
+      "output": "let i = 0; while(true) { console.log(i); }",
+      "duration": 22
+    },
+    {
+      "toolCallId": "tc-loop-004",
+      "toolName": "read_file",
+      "input": { "path": "counter.js" },
+      "output": "let i = 0; while(true) { console.log(i); }",
+      "duration": 19
+    }
   ],
   "metadata": {
     "repoPath": "/example/buggy-project",

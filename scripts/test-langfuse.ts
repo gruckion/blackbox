@@ -20,10 +20,12 @@ async function testLangfuse() {
   console.log('  Langfuse Integration Test');
   console.log('='.repeat(50));
   console.log(`Host: ${LANGFUSE_HOST}`);
-  console.log(`Public Key: ${LANGFUSE_PUBLIC_KEY ? LANGFUSE_PUBLIC_KEY.slice(0, 10) + '...' : 'NOT SET'}`);
+  console.log(
+    `Public Key: ${LANGFUSE_PUBLIC_KEY ? `${LANGFUSE_PUBLIC_KEY.slice(0, 10)}...` : 'NOT SET'}`
+  );
   console.log('');
 
-  if (!LANGFUSE_PUBLIC_KEY || !LANGFUSE_SECRET_KEY) {
+  if (!(LANGFUSE_PUBLIC_KEY && LANGFUSE_SECRET_KEY)) {
     console.log('⚠ Langfuse API keys not configured');
     console.log('');
     console.log('To configure:');

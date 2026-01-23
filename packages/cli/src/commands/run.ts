@@ -2,16 +2,16 @@
  * Run command - Full pipeline: replay, evaluate, improve, and PR
  */
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import ora from 'ora';
-import { readFile, readdir, writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { createReplayEngine } from '@blackbox/replay';
-import { createDefaultPipeline } from '@blackbox/evaluate';
-import { loadRulesFile, analyzeTraces, createRuleGenerator } from '@blackbox/improve';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { createDefaultPipeline, type PipelineResult } from '@blackbox/evaluate';
+import { analyzeTraces, createRuleGenerator, loadRulesFile } from '@blackbox/improve';
 import { createPRGenerator } from '@blackbox/pr-generator';
-import type { Trace, RuleImprovement } from '@blackbox/shared';
+import { createReplayEngine } from '@blackbox/replay';
+import type { RuleImprovement, Trace } from '@blackbox/shared';
+import chalk from 'chalk';
+import { Command } from 'commander';
+import ora from 'ora';
 
 export const runCommand = new Command('run')
   .description('Run the full Blackbox pipeline')
@@ -65,7 +65,9 @@ export const runCommand = new Command('run')
 
       // Step 2: Replay (optional)
       let replayedTraces = traces;
-      if (!options.skipReplay) {
+      if (options.skipReplay) {
+        console.log(chalk.gray('  Skipping replay (--skip-replay)'));
+      } else {
         spinner.text = `Replaying ${traces.length} traces against ${options.model}...`;
 
         const replayEngine = createReplayEngine({
@@ -75,7 +77,7 @@ export const runCommand = new Command('run')
         });
 
         const replayResults = await replayEngine.replayBatch(traces);
-        replayedTraces = replayResults.map(r => r.replayedTrace);
+        replayedTraces = replayResults.map((r) => r.replayedTrace);
 
         // Save replay results
         for (let i = 0; i < replayResults.length; i++) {
@@ -84,13 +86,21 @@ export const runCommand = new Command('run')
         }
 
         console.log(chalk.gray(`  Replayed ${replayResults.length} traces`));
-      } else {
-        console.log(chalk.gray('  Skipping replay (--skip-replay)'));
       }
 
       // Step 3: Evaluate
-      let evaluations = [];
-      if (!options.skipEvaluate) {
+      const evaluations: PipelineResult[] = [];
+      if (options.skipEvaluate) {
+        // Load existing evaluations
+        console.log(chalk.gray('  Skipping evaluation (--skip-evaluate)'));
+        const evalFiles = await readdir(evalDir).catch(() => []);
+        for (const file of evalFiles) {
+          if (file.endsWith('.json')) {
+            const content = await readFile(join(evalDir, file), 'utf-8');
+            evaluations.push(JSON.parse(content));
+          }
+        }
+      } else {
         spinner.text = `Evaluating ${replayedTraces.length} traces...`;
 
         const pipeline = createDefaultPipeline();
@@ -104,16 +114,6 @@ export const runCommand = new Command('run')
         }
 
         console.log(chalk.gray(`  Evaluated ${evaluations.length} traces`));
-      } else {
-        // Load existing evaluations
-        console.log(chalk.gray('  Skipping evaluation (--skip-evaluate)'));
-        const evalFiles = await readdir(evalDir).catch(() => []);
-        for (const file of evalFiles) {
-          if (file.endsWith('.json')) {
-            const content = await readFile(join(evalDir, file), 'utf-8');
-            evaluations.push(JSON.parse(content));
-          }
-        }
       }
 
       // Step 4: Analyze and Generate Improvements
@@ -130,7 +130,7 @@ export const runCommand = new Command('run')
 
       const generator = createRuleGenerator({
         model: options.genModel,
-        maxImprovements: parseInt(options.maxImprovements, 10),
+        maxImprovements: Number.parseInt(options.maxImprovements, 10),
       });
 
       const improvements = await generator.generate(analysis, rules);
@@ -142,9 +142,7 @@ export const runCommand = new Command('run')
 
       // Step 5: Create PRs (optional)
       if (options.createPr && improvements.length > 0) {
-        if (!options.githubToken || !options.githubOwner || !options.githubRepo) {
-          console.log(chalk.yellow('\n⚠ PR creation requires --github-token, --github-owner, and --github-repo'));
-        } else {
+        if (options.githubToken && options.githubOwner && options.githubRepo) {
           spinner.text = 'Creating PRs for improvements...';
 
           const prGenerator = createPRGenerator({
@@ -159,11 +157,11 @@ export const runCommand = new Command('run')
             (improvement: RuleImprovement) => {
               // Apply improvement to rules file content
               const newRule = `- ${improvement.improvedRule.content}\n`;
-              return rules.content + '\n' + newRule;
+              return `${rules.content}\n${newRule}`;
             }
           );
 
-          const successfulPRs = prResults.filter(r => r.success);
+          const successfulPRs = prResults.filter((r) => r.success);
           console.log(chalk.gray(`  Created ${successfulPRs.length} PRs`));
 
           // Save PR results
@@ -173,6 +171,12 @@ export const runCommand = new Command('run')
           for (const pr of successfulPRs) {
             console.log(chalk.green(`    PR #${pr.prNumber}: ${pr.prUrl}`));
           }
+        } else {
+          console.log(
+            chalk.yellow(
+              '\n⚠ PR creation requires --github-token, --github-owner, and --github-repo'
+            )
+          );
         }
       }
 
@@ -186,9 +190,10 @@ export const runCommand = new Command('run')
       console.log(chalk.gray(`  Output directory: ${outputDir}`));
 
       if (improvements.length > 0 && !options.createPr) {
-        console.log(chalk.yellow('\n💡 Run with --create-pr to create GitHub PRs for improvements'));
+        console.log(
+          chalk.yellow('\n💡 Run with --create-pr to create GitHub PRs for improvements')
+        );
       }
-
     } catch (error) {
       spinner.fail('Pipeline failed');
       console.error(chalk.red(`Error: ${error}`));

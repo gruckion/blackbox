@@ -2,8 +2,8 @@
  * Types for the improvement engine
  */
 
-import type { Trace, Rule, RuleImprovement, LoopPattern } from '@blackbox/shared';
 import type { PipelineResult } from '@blackbox/evaluate';
+import type { LoopPattern, Rule, RuleImprovement, Trace } from '@blackbox/shared';
 
 export interface RulesFile {
   /**

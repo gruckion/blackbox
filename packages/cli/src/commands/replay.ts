@@ -2,13 +2,13 @@
  * Replay command - Replay traces against local models
  */
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import ora from 'ora';
-import { readFile, readdir, writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { createReplayEngine, type ReplayEngineOptions } from '@blackbox/replay';
 import type { Trace } from '@blackbox/shared';
+import chalk from 'chalk';
+import { Command } from 'commander';
+import ora from 'ora';
 
 export const replayCommand = new Command('replay')
   .description('Replay captured traces against local models')
@@ -57,7 +57,7 @@ export const replayCommand = new Command('replay')
 
       // Replay traces
       const results = await engine.replayBatch(traces, {
-        concurrency: parseInt(options.concurrency, 10),
+        concurrency: Number.parseInt(options.concurrency, 10),
       });
 
       spinner.succeed(`Replayed ${results.length} traces`);
@@ -73,7 +73,7 @@ export const replayCommand = new Command('replay')
       console.log(chalk.green(`\n✓ Results saved to ${options.output}`));
 
       // Show summary
-      const successful = results.filter(r => r.replayedTrace).length;
+      const successful = results.filter((r) => r.replayedTrace).length;
       const failed = results.length - successful;
 
       console.log(chalk.gray('\nSummary:'));
@@ -82,7 +82,6 @@ export const replayCommand = new Command('replay')
       if (failed > 0) {
         console.log(chalk.red(`  Failed: ${failed}`));
       }
-
     } catch (error) {
       spinner.fail('Replay failed');
       console.error(chalk.red(`Error: ${error}`));

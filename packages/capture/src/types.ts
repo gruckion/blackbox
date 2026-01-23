@@ -2,7 +2,7 @@
  * Types specific to the capture package
  */
 
-import type { Trace, TraceMetadata, LLMCall } from '@blackbox/shared';
+import type { LLMCall, Trace, TraceMetadata } from '@blackbox/shared';
 
 export interface CaptureClientOptions {
   /**

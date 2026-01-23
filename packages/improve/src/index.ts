@@ -2,25 +2,22 @@
  * @blackbox/improve - Rules improvement engine
  */
 
-// Export parser
-export { loadRulesFile, saveRulesFile, createRulesFile } from './parser.js';
-
 // Export analyzer
 export { analyzeTraces, getAnalysisSummary } from './analyzer.js';
+export type { GeneratorConfig } from './generator.js';
 
 // Export generator
-export { RuleGenerator, createRuleGenerator } from './generator.js';
-
+export { createRuleGenerator, RuleGenerator } from './generator.js';
+// Export parser
+export { createRulesFile, loadRulesFile, saveRulesFile } from './parser.js';
 // Export types
 export type {
-  RulesFile,
-  ImprovementAnalysis,
   FailurePattern,
-  RuleViolation,
-  ImprovementOpportunity,
   ImproveConfig,
-  ValidationResult,
+  ImprovementAnalysis,
   ImprovementContext,
+  ImprovementOpportunity,
+  RulesFile,
+  RuleViolation,
+  ValidationResult,
 } from './types.js';
-
-export type { GeneratorConfig } from './generator.js';

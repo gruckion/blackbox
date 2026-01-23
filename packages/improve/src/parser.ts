@@ -3,11 +3,11 @@
  * Parses common rules file formats (CLAUDE.md, AGENTS.md)
  */
 
-import { readFile, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { Rule } from '@blackbox/shared';
-import type { RulesFile } from './types.js';
 import { createLogger } from '@blackbox/shared';
+import type { RulesFile } from './types.js';
 
 const logger = createLogger('rules-parser');
 
@@ -81,12 +81,12 @@ function parseMarkdownRules(content: string, path: string): Rule[] {
 
     // Append to current rule if we have one
     if (currentRule && line.trim() && !line.startsWith('#')) {
-      currentRule.content = (currentRule.content || '') + line.trim() + ' ';
+      currentRule.content = `${(currentRule.content || '') + line.trim()} `;
     }
   }
 
   // Push final rule
-  if (currentRule && currentRule.content) {
+  if (currentRule?.content) {
     rules.push(currentRule as Rule);
   }
 
@@ -160,17 +160,16 @@ export async function saveRulesFile(
       const categoryPattern = new RegExp(`^##\\s+${category}`, 'im');
       const categoryMatch = content.match(categoryPattern);
 
-      if (categoryMatch) {
+      if (categoryMatch && categoryMatch.index !== undefined) {
         // Find the end of this section (next ## or end of file)
-        const nextSectionMatch = content.slice(categoryMatch.index!).match(/\n##\s+/);
-        const insertPos = nextSectionMatch
-          ? categoryMatch.index! + nextSectionMatch.index!
-          : content.length;
+        const matchIndex = categoryMatch.index;
+        const nextSectionMatch = content.slice(matchIndex).match(/\n##\s+/);
+        const insertPos =
+          nextSectionMatch && nextSectionMatch.index !== undefined
+            ? matchIndex + nextSectionMatch.index
+            : content.length;
 
-        content =
-          content.slice(0, insertPos) +
-          `\n- ${mod.rule.content}\n` +
-          content.slice(insertPos);
+        content = `${content.slice(0, insertPos)}\n- ${mod.rule.content}\n${content.slice(insertPos)}`;
       } else {
         // Add new section
         content += `\n\n## ${category}\n\n- ${mod.rule.content}\n`;
@@ -179,7 +178,7 @@ export async function saveRulesFile(
       // Find and replace the rule
       const sourceMatch = mod.rule.source.match(/:(\d+)$/);
       if (sourceMatch) {
-        const lineNum = parseInt(sourceMatch[1], 10);
+        const lineNum = Number.parseInt(sourceMatch[1], 10);
         const lines = content.split('\n');
         if (lineNum > 0 && lineNum <= lines.length) {
           lines[lineNum - 1] = `- ${mod.newContent}`;
@@ -190,7 +189,7 @@ export async function saveRulesFile(
       // Remove the rule line
       const sourceMatch = mod.rule.source.match(/:(\d+)$/);
       if (sourceMatch) {
-        const lineNum = parseInt(sourceMatch[1], 10);
+        const lineNum = Number.parseInt(sourceMatch[1], 10);
         const lines = content.split('\n');
         if (lineNum > 0 && lineNum <= lines.length) {
           lines.splice(lineNum - 1, 1);

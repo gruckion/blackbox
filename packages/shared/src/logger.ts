@@ -18,9 +18,9 @@ export interface LoggerOptions {
 }
 
 export class Logger {
-  private level: number;
-  private prefix: string;
-  private showTimestamp: boolean;
+  private readonly level: number;
+  private readonly prefix: string;
+  private readonly showTimestamp: boolean;
 
   constructor(options: LoggerOptions = {}) {
     const envLevel = process.env.BLACKBOX_LOG_LEVEL as LogLevel | undefined;

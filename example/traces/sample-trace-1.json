@@ -116,7 +116,10 @@
     {
       "toolCallId": "tc-001",
       "toolName": "write_file",
-      "input": { "path": "hello.js", "content": "function helloWorld() {\n  console.log('Hello, World!');\n}\n\nhelloWorld();" },
+      "input": {
+        "path": "hello.js",
+        "content": "function helloWorld() {\n  console.log('Hello, World!');\n}\n\nhelloWorld();"
+      },
       "output": "Successfully wrote to hello.js",
       "duration": 50
     }

@@ -2,13 +2,13 @@
  * Evaluate command - Evaluate traces for quality
  */
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import ora from 'ora';
-import { readFile, readdir, writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { createDefaultPipeline } from '@blackbox/evaluate';
-import type { Trace, EvaluationResult, EvaluationScore } from '@blackbox/shared';
+import type { EvaluationResult, EvaluationScore, Trace } from '@blackbox/shared';
+import chalk from 'chalk';
+import { Command } from 'commander';
+import ora from 'ora';
 
 export const evaluateCommand = new Command('evaluate')
   .description('Evaluate traces for quality and issues')
@@ -52,7 +52,7 @@ export const evaluateCommand = new Command('evaluate')
       spinner.text = `Evaluating ${traces.length} traces...`;
 
       // Evaluate traces
-      const results = [];
+      const results: Awaited<ReturnType<typeof pipeline.evaluate>>[] = [];
       for (const trace of traces) {
         const result = await pipeline.evaluate(trace);
         results.push(result);
@@ -78,9 +78,11 @@ export const evaluateCommand = new Command('evaluate')
       let loopCount = 0;
 
       for (const result of results) {
-        totalOverall += result.aggregateScores['overall'] || 0;
+        totalOverall += result.aggregateScores.overall || 0;
 
-        const loopResult = result.results.find((r: EvaluationResult) => r.evaluatorName === 'loop-detector');
+        const loopResult = result.results.find(
+          (r: EvaluationResult) => r.evaluatorName === 'loop-detector'
+        );
         if (loopResult) {
           const loopScore = loopResult.scores.find((s: EvaluationScore) => s.name === 'loop-score');
           if (loopScore && loopScore.value < 1) {
@@ -94,7 +96,6 @@ export const evaluateCommand = new Command('evaluate')
       if (loopCount > 0) {
         console.log(chalk.yellow(`  Traces with loops: ${loopCount}`));
       }
-
     } catch (error) {
       spinner.fail('Evaluation failed');
       console.error(chalk.red(`Error: ${error}`));

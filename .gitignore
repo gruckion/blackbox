@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-.pnpm-store/
 
 # Build outputs
 dist/
@@ -13,7 +12,6 @@ dist/
 
 # IDE
 .idea/
-.vscode/
 *.swp
 *.swo
 .DS_Store

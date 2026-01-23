@@ -3,10 +3,10 @@
  * Uses an LLM to evaluate quality of responses
  */
 
-import OpenAI from 'openai';
 import type { EvaluationScore } from '@blackbox/shared';
-import type { Evaluator, EvaluatorContext, JudgePrompt } from '../types.js';
 import { createLogger } from '@blackbox/shared';
+import OpenAI from 'openai';
+import type { Evaluator, EvaluatorContext, JudgePrompt } from '../types.js';
 
 const logger = createLogger('llm-judge');
 
@@ -122,11 +122,9 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
       const scores: EvaluationScore[] = [];
 
       // Get the last meaningful response
-      const lastResponse = trace.calls
-        .filter((c) => c.response.content)
-        .pop();
+      const lastResponse = trace.calls.filter((c) => c.response.content).pop();
 
-      if (!lastResponse || !lastResponse.response.content) {
+      if (!lastResponse?.response.content) {
         return [
           {
             name: 'llm_judge_skipped',
@@ -160,12 +158,11 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
 
           // Extract score from response
           const scoreMatch = judgeResponse.match(/\b([1-5])\b/);
-          const score = scoreMatch ? parseInt(scoreMatch[1], 10) : 3;
+          const score = scoreMatch ? Number.parseInt(scoreMatch[1], 10) : 3;
 
           // Normalize to 0-1 scale
           const normalizedScore =
-            (score - prompt.scoreRange.min) /
-            (prompt.scoreRange.max - prompt.scoreRange.min);
+            (score - prompt.scoreRange.min) / (prompt.scoreRange.max - prompt.scoreRange.min);
 
           scores.push({
             name: `judge_${name}`,

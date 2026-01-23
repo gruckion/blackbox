@@ -2,7 +2,7 @@
  * Utility functions for Blackbox
  */
 
-import { randomUUID } from 'crypto';
+import { randomUUID } from 'node:crypto';
 
 // =============================================================================
 // ID Generation
@@ -51,10 +51,14 @@ export function durationMs(start: string, end: string): number {
  * Format milliseconds as human-readable duration
  */
 export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  const minutes = Math.floor(ms / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
+  if (ms < 1000) {
+    return `${ms}ms`;
+  }
+  if (ms < 60_000) {
+    return `${(ms / 1000).toFixed(1)}s`;
+  }
+  const minutes = Math.floor(ms / 60_000);
+  const seconds = Math.floor((ms % 60_000) / 1000);
   return `${minutes}m ${seconds}s`;
 }
 
@@ -95,8 +99,12 @@ export function textSimilarity(text1: string, text2: string): number {
   const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(Boolean));
   const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(Boolean));
 
-  if (words1.size === 0 && words2.size === 0) return 1;
-  if (words1.size === 0 || words2.size === 0) return 0;
+  if (words1.size === 0 && words2.size === 0) {
+    return 1;
+  }
+  if (words1.size === 0 || words2.size === 0) {
+    return 0;
+  }
 
   const intersection = new Set([...words1].filter((x) => words2.has(x)));
   const union = new Set([...words1, ...words2]);
@@ -130,8 +138,10 @@ export function prettyJson(obj: unknown): string {
  * Truncate string with ellipsis
  */
 export function truncate(str: string, maxLength: number): string {
-  if (str.length <= maxLength) return str;
-  return str.slice(0, maxLength - 3) + '...';
+  if (str.length <= maxLength) {
+    return str;
+  }
+  return `${str.slice(0, maxLength - 3)}...`;
 }
 
 // =============================================================================
@@ -182,7 +192,7 @@ export async function retry<T>(
   const {
     maxAttempts = 3,
     initialDelayMs = 1000,
-    maxDelayMs = 30000,
+    maxDelayMs = 30_000,
     backoffMultiplier = 2,
   } = options;
 
@@ -195,7 +205,9 @@ export async function retry<T>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      if (attempt === maxAttempts) break;
+      if (attempt === maxAttempts) {
+        break;
+      }
 
       await sleep(delay);
       delay = Math.min(delay * backoffMultiplier, maxDelayMs);
@@ -249,10 +261,7 @@ export async function processParallel<T, R>(
     if (executing.length >= concurrency) {
       await Promise.race(executing);
       // Remove completed promises
-      executing.splice(
-        executing.findIndex((p) => p === promise),
-        1
-      );
+      executing.splice(executing.indexOf(promise), 1);
     }
   }
 

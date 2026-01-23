@@ -2,7 +2,7 @@
  * Types for the replay engine
  */
 
-import type { Trace, ReplayMode, ReplayResult } from '@blackbox/shared';
+import type { ReplayMode, ReplayResult, Trace } from '@blackbox/shared';
 
 export interface ReplayEngineOptions {
   /**

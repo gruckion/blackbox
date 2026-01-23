@@ -2,14 +2,19 @@
  * Improve command - Generate rule improvements
  */
 
-import { Command } from 'commander';
-import chalk from 'chalk';
-import ora from 'ora';
-import { readFile, readdir } from 'fs/promises';
-import { join } from 'path';
-import { loadRulesFile, analyzeTraces, createRuleGenerator, getAnalysisSummary } from '@blackbox/improve';
-import type { Trace } from '@blackbox/shared';
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import type { PipelineResult } from '@blackbox/evaluate';
+import {
+  analyzeTraces,
+  createRuleGenerator,
+  getAnalysisSummary,
+  loadRulesFile,
+} from '@blackbox/improve';
+import type { Trace } from '@blackbox/shared';
+import chalk from 'chalk';
+import { Command } from 'commander';
+import ora from 'ora';
 
 export const improveCommand = new Command('improve')
   .description('Generate rule improvements from trace analysis')
@@ -65,7 +70,7 @@ export const improveCommand = new Command('improve')
       spinner.succeed('Analysis complete');
 
       // Show analysis summary
-      console.log(chalk.gray('\n' + getAnalysisSummary(analysis)));
+      console.log(chalk.gray(`\n${getAnalysisSummary(analysis)}`));
 
       if (options.dryRun) {
         console.log(chalk.yellow('\n--dry-run specified, skipping improvement generation'));
@@ -82,7 +87,7 @@ export const improveCommand = new Command('improve')
 
       const generator = createRuleGenerator({
         model: options.model,
-        maxImprovements: parseInt(options.max, 10),
+        maxImprovements: Number.parseInt(options.max, 10),
       });
 
       const improvements = await generator.generate(analysis, rules);
@@ -93,14 +98,19 @@ export const improveCommand = new Command('improve')
       console.log(chalk.green('\n📋 Generated Improvements:\n'));
 
       for (const improvement of improvements) {
-        console.log(chalk.cyan(`[${(improvement.confidence * 100).toFixed(0)}%] ${improvement.improvedRule.content}`));
+        console.log(
+          chalk.cyan(
+            `[${(improvement.confidence * 100).toFixed(0)}%] ${improvement.improvedRule.content}`
+          )
+        );
         console.log(chalk.gray(`  Reason: ${improvement.reason}`));
-        console.log(chalk.gray(`  Expected impact: ${improvement.evidence.tracesImproved} traces improved`));
+        console.log(
+          chalk.gray(`  Expected impact: ${improvement.evidence.tracesImproved} traces improved`)
+        );
         console.log('');
       }
 
       console.log(chalk.yellow('Use `blackbox run` to create PRs for these improvements'));
-
     } catch (error) {
       spinner.fail('Improvement generation failed');
       console.error(chalk.red(`Error: ${error}`));

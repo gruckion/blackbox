@@ -4,9 +4,9 @@
 
 import { createLogger } from '@blackbox/shared';
 import type {
-  OllamaListResponse,
   OllamaChatRequest,
   OllamaChatResponse,
+  OllamaListResponse,
   OllamaModelInfo,
 } from './types.js';
 
@@ -18,8 +18,8 @@ export interface OllamaClientOptions {
 }
 
 export class OllamaClient {
-  private host: string;
-  private debug: boolean;
+  private readonly host: string;
+  private readonly debug: boolean;
 
   constructor(options: OllamaClientOptions = {}) {
     this.host = options.host || process.env.OLLAMA_HOST || 'http://localhost:11434';
@@ -95,7 +95,9 @@ export class OllamaClient {
     if (reader) {
       while (true) {
         const { done } = await reader.read();
-        if (done) break;
+        if (done) {
+          break;
+        }
       }
     }
 

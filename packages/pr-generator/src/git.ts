@@ -2,18 +2,18 @@
  * Git operations using simple-git
  */
 
-import { simpleGit, type SimpleGit } from 'simple-git';
+import { existsSync, mkdirSync } from 'node:fs';
+import { unlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { createLogger } from '@blackbox/shared';
-import type { FileChange, CommitInfo } from './types.js';
-import { writeFile, unlink } from 'fs/promises';
-import { join, dirname } from 'path';
-import { mkdirSync, existsSync } from 'fs';
+import { type SimpleGit, simpleGit } from 'simple-git';
+import type { CommitInfo, FileChange } from './types.js';
 
 const logger = createLogger('git');
 
 export class GitOperations {
-  private git: SimpleGit;
-  private repoPath: string;
+  private readonly git: SimpleGit;
+  private readonly repoPath: string;
 
   constructor(repoPath: string = process.cwd()) {
     this.repoPath = repoPath;
@@ -47,7 +47,7 @@ export class GitOperations {
   /**
    * Create a new branch from current HEAD
    */
-  async createBranch(branchName: string, checkout: boolean = true): Promise<void> {
+  async createBranch(branchName: string, checkout = true): Promise<void> {
     logger.info(`Creating branch: ${branchName}`);
 
     if (checkout) {
@@ -68,7 +68,7 @@ export class GitOperations {
   /**
    * Delete a local branch
    */
-  async deleteBranch(branchName: string, force: boolean = false): Promise<void> {
+  async deleteBranch(branchName: string, force = false): Promise<void> {
     logger.info(`Deleting branch: ${branchName}`);
     const flag = force ? '-D' : '-d';
     await this.git.branch([flag, branchName]);
@@ -123,7 +123,7 @@ export class GitOperations {
     await this.applyChanges(commitInfo.files);
 
     // Stage all changed files
-    const filePaths = commitInfo.files.map(f => f.path);
+    const filePaths = commitInfo.files.map((f) => f.path);
     await this.stageFiles(filePaths);
 
     // Create commit
@@ -133,7 +133,7 @@ export class GitOperations {
   /**
    * Push branch to remote
    */
-  async push(branchName: string, remote: string = 'origin', force: boolean = false): Promise<void> {
+  async push(branchName: string, remote = 'origin', force = false): Promise<void> {
     logger.info(`Pushing branch ${branchName} to ${remote}`);
 
     const options = force ? ['--force'] : [];
@@ -143,8 +143,8 @@ export class GitOperations {
   /**
    * Pull latest from remote
    */
-  async pull(remote: string = 'origin', branch?: string): Promise<void> {
-    const targetBranch = branch || await this.getCurrentBranch();
+  async pull(remote = 'origin', branch?: string): Promise<void> {
+    const targetBranch = branch || (await this.getCurrentBranch());
     logger.info(`Pulling ${remote}/${targetBranch}`);
     await this.git.pull(remote, targetBranch);
   }
@@ -152,7 +152,7 @@ export class GitOperations {
   /**
    * Fetch from remote
    */
-  async fetch(remote: string = 'origin'): Promise<void> {
+  async fetch(remote = 'origin'): Promise<void> {
     logger.info(`Fetching from ${remote}`);
     await this.git.fetch(remote);
   }

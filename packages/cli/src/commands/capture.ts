@@ -2,8 +2,8 @@
  * Capture command - Start capturing LLM calls
  */
 
-import { Command } from 'commander';
 import chalk from 'chalk';
+import { Command } from 'commander';
 import ora from 'ora';
 
 export const captureCommand = new Command('capture')
@@ -12,7 +12,7 @@ export const captureCommand = new Command('capture')
   .option('-e, --endpoint <url>', 'Langfuse endpoint', 'http://localhost:3000')
   .option('--public-key <key>', 'Langfuse public key')
   .option('--secret-key <key>', 'Langfuse secret key')
-  .action(async (options) => {
+  .action((options) => {
     const spinner = ora('Setting up capture...').start();
 
     try {
@@ -25,7 +25,8 @@ export const captureCommand = new Command('capture')
       spinner.succeed('Capture configured');
 
       console.log(chalk.green('\n✓ To capture LLM calls, use the @blackbox/capture SDK:'));
-      console.log(chalk.cyan(`
+      console.log(
+        chalk.cyan(`
   import { createCaptureClient } from '@blackbox/capture';
 
   const client = createCaptureClient({
@@ -43,8 +44,8 @@ export const captureCommand = new Command('capture')
     model: 'gpt-4o-mini',
     messages: [{ role: 'user', content: 'Hello!' }],
   });
-`));
-
+`)
+      );
     } catch (error) {
       spinner.fail('Failed to set up capture');
       console.error(chalk.red(`Error: ${error}`));

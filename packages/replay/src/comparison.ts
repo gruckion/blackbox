@@ -2,8 +2,8 @@
  * Comparison utilities for replay analysis
  */
 
-import { textSimilarity, estimateTokens } from '@blackbox/shared';
-import type { ReplayOutput, CallComparison } from './types.js';
+import { estimateTokens, textSimilarity } from '@blackbox/shared';
+import type { CallComparison, ReplayOutput } from './types.js';
 
 export interface ComparisonSummary {
   /**
@@ -125,22 +125,14 @@ export function generateDiffReport(comparison: CallComparison): string {
 /**
  * Find the most different responses
  */
-export function findMostDifferent(
-  comparisons: CallComparison[],
-  limit = 5
-): CallComparison[] {
-  return [...comparisons]
-    .sort((a, b) => a.similarity - b.similarity)
-    .slice(0, limit);
+export function findMostDifferent(comparisons: CallComparison[], limit = 5): CallComparison[] {
+  return [...comparisons].sort((a, b) => a.similarity - b.similarity).slice(0, limit);
 }
 
 /**
  * Find responses with largest token differences
  */
-export function findLargestTokenDiff(
-  comparisons: CallComparison[],
-  limit = 5
-): CallComparison[] {
+export function findLargestTokenDiff(comparisons: CallComparison[], limit = 5): CallComparison[] {
   return [...comparisons]
     .sort((a, b) => Math.abs(b.tokenDiff) - Math.abs(a.tokenDiff))
     .slice(0, limit);
@@ -150,20 +142,19 @@ export function findLargestTokenDiff(
  * Calculate quality score for a replay batch
  */
 export function calculateQualityScore(summaries: ComparisonSummary[]): number {
-  if (summaries.length === 0) return 0;
+  if (summaries.length === 0) {
+    return 0;
+  }
 
   // Weighted score based on:
   // - 60% similarity
   // - 30% match rate
   // - 10% latency improvement (capped)
-  const avgSimilarity =
-    summaries.reduce((sum, s) => sum + s.avgSimilarity, 0) / summaries.length;
-  const avgMatchRate =
-    summaries.reduce((sum, s) => sum + s.matchRate, 0) / summaries.length;
+  const avgSimilarity = summaries.reduce((sum, s) => sum + s.avgSimilarity, 0) / summaries.length;
+  const avgMatchRate = summaries.reduce((sum, s) => sum + s.matchRate, 0) / summaries.length;
 
   // Latency score: positive if replay is faster
-  const avgLatencyDiff =
-    summaries.reduce((sum, s) => sum + s.avgLatencyDiff, 0) / summaries.length;
+  const avgLatencyDiff = summaries.reduce((sum, s) => sum + s.avgLatencyDiff, 0) / summaries.length;
   const latencyScore = Math.max(0, Math.min(1, 1 - avgLatencyDiff / 1000)); // Cap at 1s improvement
 
   return avgSimilarity * 0.6 + avgMatchRate * 0.3 + latencyScore * 0.1;
@@ -174,21 +165,25 @@ export function calculateQualityScore(summaries: ComparisonSummary[]): number {
  * Uses a higher threshold than basic similarity
  */
 export function areEquivalent(text1: string | null, text2: string | null): boolean {
-  if (text1 === null && text2 === null) return true;
-  if (text1 === null || text2 === null) return false;
-  if (text1 === text2) return true;
+  if (text1 === null && text2 === null) {
+    return true;
+  }
+  if (text1 === null || text2 === null) {
+    return false;
+  }
+  if (text1 === text2) {
+    return true;
+  }
 
   // Normalize and compare
-  const normalize = (s: string) =>
-    s
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .trim();
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
 
   const norm1 = normalize(text1);
   const norm2 = normalize(text2);
 
-  if (norm1 === norm2) return true;
+  if (norm1 === norm2) {
+    return true;
+  }
 
   // Check semantic similarity
   return textSimilarity(text1, text2) > 0.9;

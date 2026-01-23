@@ -1,12 +1,12 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
-import { resolve } from 'path';
 
 export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
     environment: 'node',
     globals: true,
-    testTimeout: 30000,
+    testTimeout: 30_000,
   },
   resolve: {
     alias: {

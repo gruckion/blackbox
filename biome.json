@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core"],
+  "formatter": {
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "rules": {
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off",
+        "useTopLevelRegex": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "warn",
+        "useAwait": "off"
+      }
+    }
+  },
+  "files": {
+    "includes": ["packages/*/src/**", "examples/*/src/**", "tests/**"]
+  }
+}

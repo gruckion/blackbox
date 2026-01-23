@@ -101,9 +101,11 @@ const response = await client.chat.completions.create({
 ## CLI Commands
 
 ### `blackbox capture`
+
 Set up trace capture for your application.
 
 ### `blackbox replay`
+
 Replay captured traces against local models.
 
 ```bash
@@ -115,6 +117,7 @@ blackbox replay \
 ```
 
 ### `blackbox evaluate`
+
 Evaluate traces for quality and issues.
 
 ```bash
@@ -125,6 +128,7 @@ blackbox evaluate \
 ```
 
 ### `blackbox improve`
+
 Generate rule improvements from analysis.
 
 ```bash
@@ -136,6 +140,7 @@ blackbox improve \
 ```
 
 ### `blackbox run`
+
 Run the full pipeline.
 
 ```bash
@@ -149,6 +154,7 @@ blackbox run \
 ```
 
 ### `blackbox status`
+
 Check health of all services.
 
 ## Infrastructure
@@ -165,6 +171,7 @@ Blackbox uses these services (via Docker Compose):
 - **MinIO** - Object storage
 
 Start all services:
+
 ```bash
 docker compose up -d
 ```
@@ -174,19 +181,24 @@ docker compose up -d
 Blackbox includes several evaluators:
 
 ### Loop Detection
+
 Identifies stuck patterns:
+
 - Repeated tool calls with same arguments
 - Oscillation between states
 - Stalled retrieval attempts
 - Circular reasoning
 
 ### Tool Efficiency
+
 Measures tool usage effectiveness:
+
 - Success rate
 - Redundant calls
 - Error recovery
 
 ### LLM Judge (optional)
+
 Uses an LLM to evaluate response quality.
 
 ## Rules Improvement

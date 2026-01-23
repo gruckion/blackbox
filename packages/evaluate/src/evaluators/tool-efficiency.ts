@@ -16,14 +16,14 @@ export const toolEfficiency: Evaluator = {
     requiresLLM: false,
   },
 
-  async evaluate(context: EvaluatorContext): Promise<EvaluationScore[]> {
+  evaluate(context: EvaluatorContext): Promise<EvaluationScore[]> {
     const { trace } = context;
     const scores: EvaluationScore[] = [];
 
     // Count tool calls
     let totalToolCalls = 0;
     let failedToolCalls = 0;
-    let uniqueTools = new Set<string>();
+    const uniqueTools = new Set<string>();
 
     for (const call of trace.calls) {
       if (call.response.toolCalls) {
@@ -118,6 +118,6 @@ export const toolEfficiency: Evaluator = {
       });
     }
 
-    return scores;
+    return Promise.resolve(scores);
   },
 };

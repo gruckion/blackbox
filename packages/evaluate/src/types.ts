@@ -2,7 +2,7 @@
  * Types for the evaluation framework
  */
 
-import type { Trace, EvaluationResult, EvaluationScore } from '@blackbox/shared';
+import type { EvaluationResult, EvaluationScore, Trace } from '@blackbox/shared';
 
 export interface EvaluatorConfig {
   /**

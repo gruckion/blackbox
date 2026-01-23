@@ -12,9 +12,9 @@ config();
 
 // Import commands
 import { captureCommand } from './commands/capture.js';
-import { replayCommand } from './commands/replay.js';
 import { evaluateCommand } from './commands/evaluate.js';
 import { improveCommand } from './commands/improve.js';
+import { replayCommand } from './commands/replay.js';
 import { runCommand } from './commands/run.js';
 import { statusCommand } from './commands/status.js';
 

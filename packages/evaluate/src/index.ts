@@ -2,33 +2,30 @@
  * @blackbox/evaluate - Evaluation framework for LLM traces
  */
 
-// Export pipeline
-export {
-  EvaluationPipeline,
-  createDefaultPipeline,
-  createMinimalPipeline,
-} from './pipeline.js';
-
 // Export evaluators
 export {
-  loopDetector,
-  toolEfficiency,
   createLLMJudge,
   DEFAULT_JUDGE_PROMPTS,
+  loopDetector,
+  toolEfficiency,
 } from './evaluators/index.js';
-
+// Export LLMJudgeConfig from llm-judge
+export type { LLMJudgeConfig } from './evaluators/llm-judge.js';
+// Export pipeline
+export {
+  createDefaultPipeline,
+  createMinimalPipeline,
+  EvaluationPipeline,
+} from './pipeline.js';
 // Export types
 export type {
+  EvaluationPipelineConfig,
+  Evaluator,
   EvaluatorConfig,
   EvaluatorContext,
   EvaluatorFunction,
-  Evaluator,
-  EvaluationPipelineConfig,
-  PipelineResult,
+  JudgePrompt,
   LoopDetectionResult,
   LoopPattern,
-  JudgePrompt,
+  PipelineResult,
 } from './types.js';
-
-// Export LLMJudgeConfig from llm-judge
-export type { LLMJudgeConfig } from './evaluators/llm-judge.js';

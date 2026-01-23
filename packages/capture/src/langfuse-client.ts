@@ -2,9 +2,9 @@
  * Langfuse client wrapper for Blackbox
  */
 
+import { createLogger } from '@blackbox/shared';
 import { Langfuse } from 'langfuse';
 import type { CapturedCall } from './types.js';
-import { createLogger } from '@blackbox/shared';
 
 const logger = createLogger('langfuse-client');
 
@@ -16,8 +16,8 @@ export interface LangfuseClientOptions {
 }
 
 export class LangfuseClient {
-  private client: Langfuse;
-  private options: LangfuseClientOptions;
+  private readonly client: Langfuse;
+  private readonly options: LangfuseClientOptions;
 
   constructor(options: LangfuseClientOptions) {
     this.options = options;
@@ -35,7 +35,7 @@ export class LangfuseClient {
   /**
    * Send a captured call as a trace to Langfuse
    */
-  async sendCall(call: CapturedCall, sessionId?: string): Promise<string> {
+  sendCall(call: CapturedCall, sessionId?: string): string {
     const trace = this.client.trace({
       id: call.id,
       name: `llm-call-${call.model}`,
@@ -120,7 +120,7 @@ export function createLangfuseClientFromEnv(): LangfuseClient | null {
   const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
   const secretKey = process.env.LANGFUSE_SECRET_KEY;
 
-  if (!host || !publicKey || !secretKey) {
+  if (!(host && publicKey && secretKey)) {
     logger.warn('Langfuse credentials not configured');
     return null;
   }

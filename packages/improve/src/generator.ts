@@ -3,8 +3,8 @@
  * Generates improved rules using LLM
  */
 
-import OpenAI from 'openai';
 import { createLogger, now, type Rule, type RuleImprovement } from '@blackbox/shared';
+import OpenAI from 'openai';
 import type { ImprovementAnalysis, ImprovementOpportunity, RulesFile } from './types.js';
 
 const logger = createLogger('generator');
@@ -17,10 +17,10 @@ export interface GeneratorConfig {
 }
 
 export class RuleGenerator {
-  private openai: OpenAI;
-  private model: string;
-  private temperature: number;
-  private maxImprovements: number;
+  private readonly openai: OpenAI;
+  private readonly model: string;
+  private readonly temperature: number;
+  private readonly maxImprovements: number;
 
   constructor(config: GeneratorConfig = {}) {
     if (config.openai instanceof OpenAI) {
@@ -53,11 +53,7 @@ export class RuleGenerator {
 
     for (const opportunity of topOpportunities) {
       try {
-        const improvement = await this.generateImprovement(
-          opportunity,
-          currentRules,
-          analysis
-        );
+        const improvement = await this.generateImprovement(opportunity, currentRules, analysis);
         if (improvement) {
           improvements.push(improvement);
         }
@@ -100,7 +96,10 @@ Description: ${opportunity.description}
 Related Patterns: ${opportunity.relatedPatterns.join(', ') || 'None'}
 
 Current relevant rules:
-${currentRules.rules.slice(0, 5).map((r) => `- ${r.content}`).join('\n')}
+${currentRules.rules
+  .slice(0, 5)
+  .map((r) => `- ${r.content}`)
+  .join('\n')}
 
 Generate a single clear, actionable rule that addresses this opportunity.`;
 
@@ -169,14 +168,14 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
     lines.push(`Total traces analyzed: ${analysis.traceCount}`);
 
     if (analysis.failurePatterns.length > 0) {
-      lines.push(`\nFailure patterns found:`);
+      lines.push('\nFailure patterns found:');
       for (const pattern of analysis.failurePatterns.slice(0, 3)) {
         lines.push(`- ${pattern.type}: ${pattern.description}`);
       }
     }
 
     if (analysis.loopPatterns.length > 0) {
-      lines.push(`\nLoop patterns found:`);
+      lines.push('\nLoop patterns found:');
       for (const pattern of analysis.loopPatterns.slice(0, 3)) {
         lines.push(`- ${pattern.type}: ${pattern.description}`);
       }

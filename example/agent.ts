@@ -136,7 +136,7 @@ Be efficient and don't repeat the same actions.`,
     console.log(`Assistant: ${assistantMessage.content || '(tool call)'}`);
 
     // Add assistant message to history
-    messages.push(assistantMessage as typeof messages[number]);
+    messages.push(assistantMessage as (typeof messages)[number]);
 
     // Check if we're done
     if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {

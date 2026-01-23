@@ -61,7 +61,7 @@ async function testOllama() {
       }
       console.log('');
     }
-  } catch (error) {
+  } catch (_error) {
     console.error('✗ Failed to connect to Ollama');
     console.error('  Make sure Ollama is running: ollama serve');
     process.exit(1);
@@ -86,7 +86,7 @@ async function testOllama() {
     }
 
     const data = (await response.json()) as OllamaGenerateResponse;
-    console.log(`✓ Generation successful`);
+    console.log('✓ Generation successful');
     console.log(`  Response: "${data.response.trim()}"`);
     if (data.eval_count) {
       console.log(`  Tokens: ${data.eval_count}`);
@@ -116,7 +116,7 @@ async function testOllama() {
     }
 
     const data = (await response.json()) as OpenAIChatResponse;
-    console.log(`✓ OpenAI-compatible endpoint working`);
+    console.log('✓ OpenAI-compatible endpoint working');
     console.log(`  Response: "${data.choices?.[0]?.message?.content?.trim()}"`);
     console.log('');
   } catch (error) {

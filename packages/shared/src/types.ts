@@ -67,11 +67,13 @@ export const ToolDefinitionSchema = z.object({
   function: z.object({
     name: z.string(),
     description: z.string().optional(),
-    parameters: z.object({
-      type: z.literal('object'),
-      properties: z.record(ToolParameterSchema).optional(),
-      required: z.array(z.string()).optional(),
-    }).optional(),
+    parameters: z
+      .object({
+        type: z.literal('object'),
+        properties: z.record(ToolParameterSchema).optional(),
+        required: z.array(z.string()).optional(),
+      })
+      .optional(),
   }),
 });
 export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
@@ -164,14 +166,16 @@ export const TraceSchema = z.object({
   metadata: TraceMetadataSchema.optional(),
 
   // Outcomes
-  outcome: z.object({
-    success: z.boolean().optional(),
-    testsPassed: z.boolean().optional(),
-    lintPassed: z.boolean().optional(),
-    buildPassed: z.boolean().optional(),
-    userRating: z.number().min(1).max(5).optional(),
-    error: z.string().optional(),
-  }).optional(),
+  outcome: z
+    .object({
+      success: z.boolean().optional(),
+      testsPassed: z.boolean().optional(),
+      lintPassed: z.boolean().optional(),
+      buildPassed: z.boolean().optional(),
+      userRating: z.number().min(1).max(5).optional(),
+      error: z.string().optional(),
+    })
+    .optional(),
 });
 export type Trace = z.infer<typeof TraceSchema>;
 
@@ -287,43 +291,55 @@ export type LoopPattern = z.infer<typeof LoopPatternSchema>;
 
 export const BlackboxConfigSchema = z.object({
   // Capture settings
-  capture: z.object({
-    enabled: z.boolean().default(true),
-    endpoint: z.string().optional(),
-    batchSize: z.number().default(10),
-    flushIntervalMs: z.number().default(5000),
-  }).optional(),
+  capture: z
+    .object({
+      enabled: z.boolean().default(true),
+      endpoint: z.string().optional(),
+      batchSize: z.number().default(10),
+      flushIntervalMs: z.number().default(5000),
+    })
+    .optional(),
 
   // Langfuse settings
-  langfuse: z.object({
-    host: z.string(),
-    publicKey: z.string(),
-    secretKey: z.string(),
-  }).optional(),
+  langfuse: z
+    .object({
+      host: z.string(),
+      publicKey: z.string(),
+      secretKey: z.string(),
+    })
+    .optional(),
 
   // LiteLLM settings
-  litellm: z.object({
-    host: z.string(),
-    apiKey: z.string().optional(),
-  }).optional(),
+  litellm: z
+    .object({
+      host: z.string(),
+      apiKey: z.string().optional(),
+    })
+    .optional(),
 
   // Ollama settings
-  ollama: z.object({
-    host: z.string(),
-    defaultModel: z.string().default('llama3.2:3b'),
-  }).optional(),
+  ollama: z
+    .object({
+      host: z.string(),
+      defaultModel: z.string().default('llama3.2:3b'),
+    })
+    .optional(),
 
   // Rules file settings
-  rules: z.object({
-    file: z.string().default('CLAUDE.md'),
-    autoImprove: z.boolean().default(false),
-  }).optional(),
+  rules: z
+    .object({
+      file: z.string().default('CLAUDE.md'),
+      autoImprove: z.boolean().default(false),
+    })
+    .optional(),
 
   // GitHub settings
-  github: z.object({
-    token: z.string(),
-    owner: z.string(),
-    repo: z.string(),
-  }).optional(),
+  github: z
+    .object({
+      token: z.string(),
+      owner: z.string(),
+      repo: z.string(),
+    })
+    .optional(),
 });
 export type BlackboxConfig = z.infer<typeof BlackboxConfigSchema>;

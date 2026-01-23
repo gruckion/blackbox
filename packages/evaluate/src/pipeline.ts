@@ -3,26 +3,21 @@
  * Orchestrates running multiple evaluators on traces
  */
 
-import {
-  now,
-  createLogger,
-  type Trace,
-  type EvaluationResult,
-} from '@blackbox/shared';
+import { createLogger, type EvaluationResult, now, type Trace } from '@blackbox/shared';
+import { createLLMJudge, loopDetector, toolEfficiency } from './evaluators/index.js';
 import type {
+  EvaluationPipelineConfig,
   Evaluator,
   EvaluatorContext,
-  EvaluationPipelineConfig,
   PipelineResult,
 } from './types.js';
-import { loopDetector, toolEfficiency, createLLMJudge } from './evaluators/index.js';
 
 const logger = createLogger('eval-pipeline');
 
 export class EvaluationPipeline {
-  private evaluators: Evaluator[];
-  private parallel: boolean;
-  private debug: boolean;
+  private readonly evaluators: Evaluator[];
+  private readonly parallel: boolean;
+  private readonly debug: boolean;
 
   constructor(config: EvaluationPipelineConfig) {
     this.evaluators = config.evaluators;
@@ -117,16 +112,17 @@ export class EvaluationPipeline {
 
         // Flag issues (low scores)
         if (score.value < 0.5 && score.name !== 'error') {
-          issues.push(`${result.evaluatorName}: ${score.name} = ${score.value.toFixed(2)} - ${score.explanation}`);
+          issues.push(
+            `${result.evaluatorName}: ${score.name} = ${score.value.toFixed(2)} - ${score.explanation}`
+          );
         }
       }
     }
 
     // Calculate overall score
-    const scoreValues = Object.values(aggregateScores).filter((v) => !isNaN(v));
+    const scoreValues = Object.values(aggregateScores).filter((v) => !Number.isNaN(v));
     if (scoreValues.length > 0) {
-      aggregateScores['overall'] =
-        scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
+      aggregateScores.overall = scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length;
     }
 
     return {
@@ -151,13 +147,13 @@ export class EvaluationPipeline {
 
     for (let i = 0; i < traces.length; i += concurrency) {
       const batch = traces.slice(i, i + concurrency);
-      const batchResults = await Promise.all(
-        batch.map((trace) => this.evaluate(trace))
-      );
+      const batchResults = await Promise.all(batch.map((trace) => this.evaluate(trace)));
       results.push(...batchResults);
 
       if (this.debug) {
-        logger.info(`Evaluated ${Math.min(i + concurrency, traces.length)}/${traces.length} traces`);
+        logger.info(
+          `Evaluated ${Math.min(i + concurrency, traces.length)}/${traces.length} traces`
+        );
       }
     }
 
@@ -182,7 +178,9 @@ export class EvaluationPipeline {
 /**
  * Create a default evaluation pipeline
  */
-export function createDefaultPipeline(config?: Partial<EvaluationPipelineConfig>): EvaluationPipeline {
+export function createDefaultPipeline(
+  config?: Partial<EvaluationPipelineConfig>
+): EvaluationPipeline {
   const evaluators: Evaluator[] = [loopDetector, toolEfficiency];
 
   // Add LLM judge if OpenAI config provided

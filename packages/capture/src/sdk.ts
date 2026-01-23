@@ -2,28 +2,28 @@
  * Capture SDK - Wraps OpenAI client to capture all LLM calls
  */
 
-import OpenAI from 'openai';
-import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
 import {
+  createLogger,
   generateCallId,
   generateSessionId,
   generateTraceId,
-  now,
-  createLogger,
-  type Trace,
   type Message,
+  now,
   type ToolCall,
+  type Trace,
   type Usage,
 } from '@blackbox/shared';
+import OpenAI from 'openai';
+import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
+import { createLangfuseClientFromEnv, LangfuseClient } from './langfuse-client.js';
 import type {
+  CaptureCallback,
+  CaptureClient,
   CaptureClientOptions,
   CapturedCall,
   CaptureSession,
   CaptureStats,
-  CaptureCallback,
-  CaptureClient,
 } from './types.js';
-import { LangfuseClient, createLangfuseClientFromEnv } from './langfuse-client.js';
 
 const logger = createLogger('capture-sdk');
 
@@ -92,10 +92,10 @@ export function createCaptureClient(
   }
 
   // Helper to extract usage from response
-  function extractUsage(
-    usage: OpenAI.Completions.CompletionUsage | undefined
-  ): Usage | undefined {
-    if (!usage) return undefined;
+  function extractUsage(usage: OpenAI.Completions.CompletionUsage | undefined): Usage | undefined {
+    if (!usage) {
+      return undefined;
+    }
     return {
       promptTokens: usage.prompt_tokens,
       completionTokens: usage.completion_tokens,
@@ -107,7 +107,9 @@ export function createCaptureClient(
   function extractToolCalls(
     choice: OpenAI.Chat.Completions.ChatCompletion.Choice
   ): ToolCall[] | undefined {
-    if (!choice.message.tool_calls) return undefined;
+    if (!choice.message.tool_calls) {
+      return undefined;
+    }
     return choice.message.tool_calls.map((tc) => ({
       id: tc.id,
       type: 'function' as const,
@@ -120,7 +122,9 @@ export function createCaptureClient(
 
   // Schedule flush
   function scheduleFlush() {
-    if (flushTimer) return;
+    if (flushTimer) {
+      return;
+    }
     const interval = captureOptions.flushIntervalMs || 5000;
     flushTimer = setTimeout(async () => {
       flushTimer = null;
@@ -130,7 +134,9 @@ export function createCaptureClient(
 
   // Flush pending calls
   async function flushPending() {
-    if (pendingCalls.length === 0) return;
+    if (pendingCalls.length === 0) {
+      return;
+    }
 
     const toFlush = [...pendingCalls];
     pendingCalls.length = 0;
@@ -162,7 +168,7 @@ export function createCaptureClient(
 
     // Add to current session if exists
     if (currentSessionId && sessions.has(currentSessionId)) {
-      sessions.get(currentSessionId)!.calls.push(call);
+      sessions.get(currentSessionId)?.calls.push(call);
     }
 
     // Add to pending
@@ -190,11 +196,11 @@ export function createCaptureClient(
   const originalCreate = baseClient.chat.completions.create.bind(baseClient.chat.completions);
 
   // Override with capturing version
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (baseClient.chat.completions as any).create = async function (
+  // biome-ignore lint/suspicious/noExplicitAny: OpenAI SDK typing requires override
+  (baseClient.chat.completions as any).create = async (
     params: ChatCompletionCreateParamsNonStreaming
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<any> {
+    // biome-ignore lint/suspicious/noExplicitAny: Return type matches OpenAI SDK
+  ): Promise<any> => {
     const callId = generateCallId();
     const startTime = now();
     const startMs = Date.now();
@@ -218,7 +224,7 @@ export function createCaptureClient(
         function: {
           name: t.function.name,
           description: t.function.description,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          // biome-ignore lint/suspicious/noExplicitAny: JSON schema type mismatch
           parameters: t.function.parameters as any,
         },
       }));
@@ -277,7 +283,9 @@ export function createCaptureClient(
     },
 
     endSession(): CaptureSession | undefined {
-      if (!currentSessionId) return undefined;
+      if (!currentSessionId) {
+        return undefined;
+      }
 
       const session = sessions.get(currentSessionId);
       currentSessionId = undefined;

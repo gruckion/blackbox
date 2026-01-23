@@ -2,8 +2,8 @@
  * Status command - Check service health
  */
 
-import { Command } from 'commander';
 import chalk from 'chalk';
+import { Command } from 'commander';
 import ora from 'ora';
 
 interface ServiceStatus {
@@ -26,15 +26,14 @@ async function checkService(name: string, url: string): Promise<ServiceStatus> {
 
     if (response.ok) {
       return { name, url, status: 'ok', responseTime };
-    } else {
-      return {
-        name,
-        url,
-        status: 'error',
-        message: `HTTP ${response.status}`,
-        responseTime,
-      };
     }
+    return {
+      name,
+      url,
+      status: 'error',
+      message: `HTTP ${response.status}`,
+      responseTime,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Connection failed';
     return { name, url, status: 'error', message };
@@ -70,7 +69,7 @@ export const statusCommand = new Command('status')
     spinner.stop();
 
     // Display results
-    const maxNameLen = Math.max(...results.map(r => r.name.length));
+    const maxNameLen = Math.max(...results.map((r) => r.name.length));
 
     for (const result of results) {
       const nameStr = result.name.padEnd(maxNameLen + 2);
@@ -86,7 +85,7 @@ export const statusCommand = new Command('status')
     }
 
     // Summary
-    const healthy = results.filter(r => r.status === 'ok').length;
+    const healthy = results.filter((r) => r.status === 'ok').length;
     const total = results.length;
 
     console.log('');
@@ -95,7 +94,7 @@ export const statusCommand = new Command('status')
     } else if (healthy > 0) {
       console.log(chalk.yellow(`⚠ ${healthy}/${total} services healthy`));
     } else {
-      console.log(chalk.red(`✗ No services responding`));
+      console.log(chalk.red('✗ No services responding'));
     }
 
     // Docker tip
@@ -104,13 +103,13 @@ export const statusCommand = new Command('status')
     }
 
     // Ollama models
-    const ollamaStatus = results.find(r => r.name === 'Ollama');
+    const ollamaStatus = results.find((r) => r.name === 'Ollama');
     if (ollamaStatus?.status === 'ok') {
       console.log(chalk.gray('\nChecking Ollama models...'));
 
       try {
         const response = await fetch(`${options.ollama}/api/tags`);
-        const data = await response.json() as { models?: Array<{ name: string; size: number }> };
+        const data = (await response.json()) as { models?: Array<{ name: string; size: number }> };
 
         if (data.models && data.models.length > 0) {
           console.log(chalk.gray('Available models:'));
@@ -119,7 +118,9 @@ export const statusCommand = new Command('status')
             console.log(chalk.gray(`  - ${model.name} (${sizeGB}GB)`));
           }
         } else {
-          console.log(chalk.yellow('No models installed. Pull a model with: ollama pull llama3.2:3b'));
+          console.log(
+            chalk.yellow('No models installed. Pull a model with: ollama pull llama3.2:3b')
+          );
         }
       } catch {
         // Ignore Ollama model check errors

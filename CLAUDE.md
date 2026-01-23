@@ -10,27 +10,34 @@ Blackbox is a "Nightly CI for coding agents" - it captures LLM calls during deve
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Build all packages
-pnpm build
+bun run build
 
 # Run tests
-pnpm test
+bun run test
 
 # Type check
-pnpm typecheck
+bun run typecheck
+
+# Lint and format (uses Ultracite/Biome)
+bun run check        # Check linting and formatting
+bun run check:fix    # Auto-fix issues (includes --unsafe fixes)
+
+# Manual biome commands (if needed)
+bunx biome check --write --unsafe  # Apply all fixes including unsafe ones
 
 # Start infrastructure (Langfuse, Phoenix, LiteLLM)
-pnpm docker:up
+bun run docker:up
 
 # CLI commands (after build)
-pnpm --filter @blackbox/cli start capture    # Start capture mode
-pnpm --filter @blackbox/cli start replay     # Replay traces
-pnpm --filter @blackbox/cli start evaluate   # Run evaluations
-pnpm --filter @blackbox/cli start improve    # Generate improvements
-pnpm --filter @blackbox/cli start pr         # Create PR
-pnpm --filter @blackbox/cli start run        # Full nightly pipeline
+bun --filter @blackbox/cli start capture    # Start capture mode
+bun --filter @blackbox/cli start replay     # Replay traces
+bun --filter @blackbox/cli start evaluate   # Run evaluations
+bun --filter @blackbox/cli start improve    # Generate improvements
+bun --filter @blackbox/cli start pr         # Create PR
+bun --filter @blackbox/cli start run        # Full nightly pipeline
 ```
 
 ## Architecture
@@ -79,9 +86,10 @@ pnpm --filter @blackbox/cli start run        # Full nightly pipeline
 ## Development Workflow
 
 1. Make changes in `packages/*/src/`
-2. Run `pnpm typecheck` to verify types
-3. Run `pnpm test` to run tests
-4. Run `pnpm build` to build all packages
+2. Run `bun run typecheck` to verify types
+3. Run `bun run test` to run tests
+4. Run `bun run check:fix` to lint and format
+5. Run `bun run build` to build all packages
 
 ## Infrastructure Ports
 

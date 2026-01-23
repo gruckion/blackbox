@@ -3,33 +3,28 @@
  */
 
 import {
-  generateTraceId,
-  generateCallId,
-  now,
-  textSimilarity,
-  estimateTokens,
   createLogger,
-  type Trace,
+  estimateTokens,
+  generateCallId,
+  generateTraceId,
   type LLMCall,
   type Message,
+  now,
   type ReplayMode,
+  type Trace,
+  textSimilarity,
 } from '@blackbox/shared';
-import { OllamaClient, createOllamaClient } from './ollama-client.js';
-import type {
-  ReplayEngineOptions,
-  ReplayRequest,
-  ReplayOutput,
-  CallComparison,
-} from './types.js';
+import { createOllamaClient, type OllamaClient } from './ollama-client.js';
+import type { CallComparison, ReplayEngineOptions, ReplayOutput, ReplayRequest } from './types.js';
 
 const logger = createLogger('replay-engine');
 
 export class ReplayEngine {
-  private ollama: OllamaClient;
-  private defaultModel: string;
-  private defaultMode: ReplayMode;
-  private debug: boolean;
-  public readonly timeoutMs: number;
+  private readonly ollama: OllamaClient;
+  private readonly defaultModel: string;
+  private readonly defaultMode: ReplayMode;
+  private readonly debug: boolean;
+  readonly timeoutMs: number;
 
   constructor(options: ReplayEngineOptions = {}) {
     this.ollama = createOllamaClient({
@@ -39,10 +34,12 @@ export class ReplayEngine {
     this.defaultModel = options.defaultModel || process.env.OLLAMA_DEFAULT_MODEL || 'llama3.2:3b';
     this.defaultMode = options.defaultMode || 'exact';
     this.debug = options.debug ?? false;
-    this.timeoutMs = options.timeoutMs || 120000; // 2 minutes default
+    this.timeoutMs = options.timeoutMs || 120_000; // 2 minutes default
 
     if (this.debug) {
-      logger.info(`Replay engine initialized: model=${this.defaultModel}, mode=${this.defaultMode}`);
+      logger.info(
+        `Replay engine initialized: model=${this.defaultModel}, mode=${this.defaultMode}`
+      );
     }
   }
 
@@ -270,7 +267,7 @@ export class ReplayEngine {
     const latencyDiff = replayed.latency - original.latency;
 
     // Determine functional match (high similarity threshold)
-    const functionalMatch = similarity > 0.8 || (originalContent === replayContent);
+    const functionalMatch = similarity > 0.8 || originalContent === replayContent;
 
     return {
       originalCallId: original.id,

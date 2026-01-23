@@ -2,16 +2,16 @@
  * GitHub API operations using Octokit
  */
 
-import { Octokit } from '@octokit/rest';
 import { createLogger } from '@blackbox/shared';
-import type { PRGeneratorConfig, PRContent, PRResult } from './types.js';
+import { Octokit } from '@octokit/rest';
+import type { PRContent, PRGeneratorConfig, PRResult } from './types.js';
 
 const logger = createLogger('github');
 
 export class GitHubOperations {
-  private octokit: Octokit;
-  private owner: string;
-  private repo: string;
+  private readonly octokit: Octokit;
+  private readonly owner: string;
+  private readonly repo: string;
 
   constructor(config: PRGeneratorConfig) {
     this.octokit = new Octokit({
@@ -129,15 +129,15 @@ export class GitHubOperations {
       ref,
     });
 
-    const checks = checkRuns.data.check_runs.map(check => ({
+    const checks = checkRuns.data.check_runs.map((check) => ({
       name: check.name,
       status: check.status,
       conclusion: check.conclusion,
     }));
 
     // Determine overall status
-    const hasFailures = checks.some(c => c.conclusion === 'failure');
-    const hasPending = checks.some(c => c.status !== 'completed');
+    const hasFailures = checks.some((c) => c.conclusion === 'failure');
+    const hasPending = checks.some((c) => c.status !== 'completed');
 
     let status: 'pending' | 'success' | 'failure' = 'success';
     if (hasFailures) {
@@ -256,7 +256,7 @@ export class GitHubOperations {
 
     const prs = await this.octokit.pulls.list(params);
 
-    return prs.data.map(pr => ({
+    return prs.data.map((pr) => ({
       number: pr.number,
       title: pr.title,
       url: pr.html_url,

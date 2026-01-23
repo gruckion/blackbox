@@ -4,14 +4,13 @@
  * This test runs the full pipeline: parse traces → evaluate → analyze → generate improvements
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
-
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { createDefaultPipeline } from '@blackbox/evaluate';
+import { analyzeTraces, getAnalysisSummary, loadRulesFile } from '@blackbox/improve';
 // Import packages
 import type { Trace } from '@blackbox/shared';
-import { createDefaultPipeline } from '@blackbox/evaluate';
-import { loadRulesFile, analyzeTraces, getAnalysisSummary } from '@blackbox/improve';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const EXAMPLE_DIR = join(__dirname, '..', 'example');
 
@@ -77,9 +76,7 @@ describe('Blackbox Integration', () => {
       expect(result.hasIssues).toBe(true);
 
       // Should have loop detector results
-      const loopResult = result.results.find(
-        r => r.evaluatorName === 'loop-detector'
-      );
+      const loopResult = result.results.find((r) => r.evaluatorName === 'loop-detector');
       expect(loopResult).toBeDefined();
     });
   });
@@ -102,11 +99,7 @@ describe('Blackbox Integration', () => {
 
       const rules = await loadRulesFile(join(EXAMPLE_DIR, 'CLAUDE.md'));
 
-      const analysis = analyzeTraces(
-        [sampleTrace, loopTrace],
-        [eval1, eval2],
-        rules
-      );
+      const analysis = analyzeTraces([sampleTrace, loopTrace], [eval1, eval2], rules);
 
       expect(analysis).toBeDefined();
       expect(analysis.traceCount).toBe(2);
@@ -156,9 +149,7 @@ describe('Blackbox Integration', () => {
 
       // 2. Evaluate traces
       const pipeline = createDefaultPipeline();
-      const evaluations = await Promise.all(
-        traces.map(t => pipeline.evaluate(t))
-      );
+      const evaluations = await Promise.all(traces.map((t) => pipeline.evaluate(t)));
 
       expect(evaluations).toHaveLength(2);
 

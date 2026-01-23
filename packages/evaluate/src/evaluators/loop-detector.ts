@@ -4,8 +4,8 @@
  */
 
 import type { EvaluationScore } from '@blackbox/shared';
-import type { Evaluator, EvaluatorContext, LoopPattern } from '../types.js';
 import { textSimilarity } from '@blackbox/shared';
+import type { Evaluator, EvaluatorContext, LoopPattern } from '../types.js';
 
 /**
  * Detect repeated tool calls (same tool with same/similar arguments)
@@ -32,7 +32,9 @@ function detectRepeatedToolCalls(context: EvaluatorContext): LoopPattern[] {
 
   // Check for repeated calls
   for (const [toolName, calls] of toolCallGroups) {
-    if (calls.length < 3) continue;
+    if (calls.length < 3) {
+      continue;
+    }
 
     // Check for identical or very similar arguments
     let repeatCount = 0;
@@ -69,7 +71,9 @@ function detectOscillation(context: EvaluatorContext): LoopPattern[] {
   const patterns: LoopPattern[] = [];
   const { trace } = context;
 
-  if (trace.calls.length < 4) return patterns;
+  if (trace.calls.length < 4) {
+    return patterns;
+  }
 
   // Look for alternating patterns in response content
   const contents = trace.calls.map((c) =>
@@ -108,7 +112,9 @@ function detectStalled(context: EvaluatorContext): LoopPattern[] {
   const patterns: LoopPattern[] = [];
   const { trace } = context;
 
-  if (trace.calls.length < 5) return patterns;
+  if (trace.calls.length < 5) {
+    return patterns;
+  }
 
   // Check for low novelty in consecutive responses
   const contents = trace.calls.map((c) =>
@@ -186,6 +192,8 @@ export const loopDetector: Evaluator = {
           break;
         case 'circular':
           severity += 0.5;
+          break;
+        default:
           break;
       }
     }
