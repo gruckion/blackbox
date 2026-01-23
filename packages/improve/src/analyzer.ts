@@ -13,6 +13,10 @@ import type {
   RuleViolation,
 } from './types.js';
 
+// Top-level regex patterns
+const WHITESPACE_REGEX = /\s+/;
+const NEGATION_REGEX = /\b(don't|not|never|shouldn't|won't)\b/;
+
 // Internal type for evaluator loop patterns before conversion
 interface EvaluatorLoopPattern {
   type: string;
@@ -173,7 +177,7 @@ function findRuleViolations(traces: Trace[], rules: RulesFile): RuleViolation[] 
       // This is a very rough heuristic based on keyword matching
       const ruleKeywords = rule.content
         .toLowerCase()
-        .split(/\s+/)
+        .split(WHITESPACE_REGEX)
         .filter((w) => w.length > 4);
 
       for (const call of trace.calls) {
@@ -181,7 +185,7 @@ function findRuleViolations(traces: Trace[], rules: RulesFile): RuleViolation[] 
           typeof call.response.content === 'string' ? call.response.content.toLowerCase() : '';
 
         // Check if response seems to contradict rule
-        const containsNegation = /\b(don't|not|never|shouldn't|won't)\b/.test(content);
+        const containsNegation = NEGATION_REGEX.test(content);
         const containsKeyword = ruleKeywords.some((kw) => content.includes(kw));
 
         if (containsNegation && containsKeyword) {

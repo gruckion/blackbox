@@ -184,7 +184,7 @@ export class GitOperations {
   /**
    * Get diff for files
    */
-  async getDiff(files?: string[]): Promise<string> {
+  getDiff(files?: string[]): Promise<string> {
     if (files && files.length > 0) {
       return this.git.diff(['--', ...files]);
     }

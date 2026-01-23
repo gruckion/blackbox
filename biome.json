@@ -11,19 +11,23 @@
   },
   "linter": {
     "rules": {
-      "complexity": {
-        "noExcessiveCognitiveComplexity": "off"
-      },
-      "performance": {
-        "noBarrelFile": "off",
-        "useTopLevelRegex": "off"
-      },
       "suspicious": {
-        "noExplicitAny": "warn",
-        "useAwait": "off"
+        "noExplicitAny": "warn"
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/*/src/index.ts", "packages/*/src/*/index.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    }
+  ],
   "files": {
     "includes": ["packages/*/src/**", "examples/*/src/**", "tests/**"]
   }

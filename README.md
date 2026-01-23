@@ -1,6 +1,8 @@
+![Blackbox - Nightly CI for Coding Agents](assets/banner.jpeg)
+
 # Blackbox
 
-**Nightly CI for Coding Agents** - Capture, replay, evaluate, and automatically improve your AI coding assistant rules.
+**Nightly CI for Coding Agents** — Capture, replay, evaluate, and automatically improve your AI coding assistant rules.
 
 ## Overview
 

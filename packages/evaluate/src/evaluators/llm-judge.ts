@@ -10,6 +10,9 @@ import type { Evaluator, EvaluatorContext, JudgePrompt } from '../types.js';
 
 const logger = createLogger('llm-judge');
 
+// Top-level regex for score extraction
+const SCORE_REGEX = /\b([1-5])\b/;
+
 /**
  * Default judge prompts for common evaluation criteria
  */
@@ -157,7 +160,7 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
           const judgeResponse = response.choices[0]?.message?.content || '';
 
           // Extract score from response
-          const scoreMatch = judgeResponse.match(/\b([1-5])\b/);
+          const scoreMatch = judgeResponse.match(SCORE_REGEX);
           const score = scoreMatch ? Number.parseInt(scoreMatch[1], 10) : 3;
 
           // Normalize to 0-1 scale

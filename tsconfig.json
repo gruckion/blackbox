@@ -4,8 +4,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
-    "outDir": "./dist",
-    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "strictNullChecks": true,
@@ -19,7 +17,25 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "composite": true
   },
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/capture" },
+    { "path": "./packages/replay" },
+    { "path": "./packages/evaluate" },
+    { "path": "./packages/improve" },
+    { "path": "./packages/pr-generator" },
+    { "path": "./packages/cli" }
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "example",
+    "examples",
+    "scripts",
+    "vitest.config.ts"
+  ]
 }

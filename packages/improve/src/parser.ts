@@ -11,86 +11,281 @@ import type { RulesFile } from './types.js';
 
 const logger = createLogger('rules-parser');
 
+// Top-level regex patterns for markdown parsing
+const H2_HEADING_REGEX = /^##\s+(.+)$/;
+const H3_HEADING_REGEX = /^###\s+(.+)$/;
+const BULLET_REGEX = /^[-*]\s+(.+)$/;
+const NUMBERED_REGEX = /^\d+\.\s+(.+)$/;
+const NEXT_SECTION_REGEX = /\n##\s+/;
+const LINE_NUMBER_REGEX = /:(\d+)$/;
+const WHITESPACE_REPLACE_REGEX = /\s+/g;
+
+interface RuleModification {
+  type: 'add' | 'modify' | 'remove';
+  rule: Rule;
+  newContent?: string;
+}
+
+interface ParseState {
+  rules: Rule[];
+  currentRule: Partial<Rule> | null;
+  currentCategory: string;
+}
+
+/**
+ * Create a rule from parsed content
+ */
+function createRule(
+  content: string,
+  category: string,
+  path: string,
+  lineNumber: number,
+  existingRulesCount: number
+): Rule {
+  return {
+    id: `rule-${existingRulesCount + 1}`,
+    content,
+    category,
+    source: `${path}:${lineNumber}`,
+  };
+}
+
+/**
+ * Handle H2 heading line
+ */
+function handleH2Heading(line: string, state: ParseState): boolean {
+  const match = line.match(H2_HEADING_REGEX);
+  if (!match) {
+    return false;
+  }
+
+  state.currentCategory = match[1].toLowerCase().replace(WHITESPACE_REPLACE_REGEX, '-');
+  return true;
+}
+
+/**
+ * Handle H3 heading line
+ */
+function handleH3Heading(
+  line: string,
+  state: ParseState,
+  path: string,
+  lineNumber: number
+): boolean {
+  const match = line.match(H3_HEADING_REGEX);
+  if (!match) {
+    return false;
+  }
+
+  if (state.currentRule) {
+    state.rules.push(state.currentRule as Rule);
+  }
+  state.currentRule = createRule('', state.currentCategory, path, lineNumber, state.rules.length);
+  return true;
+}
+
+/**
+ * Handle bullet point line
+ */
+function handleBulletPoint(
+  line: string,
+  state: ParseState,
+  path: string,
+  lineNumber: number
+): boolean {
+  const match = line.match(BULLET_REGEX);
+  if (!match) {
+    return false;
+  }
+
+  const ruleContent = match[1].trim();
+  if (ruleContent.length > 10) {
+    state.rules.push(
+      createRule(ruleContent, state.currentCategory, path, lineNumber, state.rules.length)
+    );
+  }
+  return true;
+}
+
+/**
+ * Handle numbered list line
+ */
+function handleNumberedList(
+  line: string,
+  state: ParseState,
+  path: string,
+  lineNumber: number
+): boolean {
+  const match = line.match(NUMBERED_REGEX);
+  if (!match) {
+    return false;
+  }
+
+  const ruleContent = match[1].trim();
+  if (ruleContent.length > 10) {
+    state.rules.push(
+      createRule(ruleContent, state.currentCategory, path, lineNumber, state.rules.length)
+    );
+  }
+  return true;
+}
+
+/**
+ * Handle regular content line
+ */
+function handleContentLine(line: string, state: ParseState): void {
+  if (state.currentRule && line.trim() && !line.startsWith('#')) {
+    state.currentRule.content = `${(state.currentRule.content || '') + line.trim()} `;
+  }
+}
+
 /**
  * Parse a markdown rules file
  */
 function parseMarkdownRules(content: string, path: string): Rule[] {
-  const rules: Rule[] = [];
   const lines = content.split('\n');
+  const state: ParseState = {
+    rules: [],
+    currentRule: null,
+    currentCategory: 'general',
+  };
 
-  let currentRule: Partial<Rule> | null = null;
-  let currentCategory = 'general';
   let lineNumber = 0;
 
   for (const line of lines) {
     lineNumber++;
 
-    // Track headings for category
-    const h2Match = line.match(/^##\s+(.+)$/);
-    const h3Match = line.match(/^###\s+(.+)$/);
-
-    if (h2Match) {
-      currentCategory = h2Match[1].toLowerCase().replace(/\s+/g, '-');
+    if (handleH2Heading(line, state)) {
+      continue;
+    }
+    if (handleH3Heading(line, state, path, lineNumber)) {
+      continue;
+    }
+    if (handleBulletPoint(line, state, path, lineNumber)) {
+      continue;
+    }
+    if (handleNumberedList(line, state, path, lineNumber)) {
       continue;
     }
 
-    if (h3Match) {
-      // Subsection, could be a rule name
-      if (currentRule) {
-        rules.push(currentRule as Rule);
-      }
-      currentRule = {
-        id: `rule-${rules.length + 1}`,
-        content: '',
-        category: currentCategory,
-        source: `${path}:${lineNumber}`,
-      };
-      continue;
-    }
-
-    // Look for bullet points as rules
-    const bulletMatch = line.match(/^[-*]\s+(.+)$/);
-    if (bulletMatch) {
-      const ruleContent = bulletMatch[1].trim();
-      if (ruleContent.length > 10) {
-        // Ignore very short bullets
-        rules.push({
-          id: `rule-${rules.length + 1}`,
-          content: ruleContent,
-          category: currentCategory,
-          source: `${path}:${lineNumber}`,
-        });
-      }
-      continue;
-    }
-
-    // Look for numbered lists
-    const numberedMatch = line.match(/^\d+\.\s+(.+)$/);
-    if (numberedMatch) {
-      const ruleContent = numberedMatch[1].trim();
-      if (ruleContent.length > 10) {
-        rules.push({
-          id: `rule-${rules.length + 1}`,
-          content: ruleContent,
-          category: currentCategory,
-          source: `${path}:${lineNumber}`,
-        });
-      }
-      continue;
-    }
-
-    // Append to current rule if we have one
-    if (currentRule && line.trim() && !line.startsWith('#')) {
-      currentRule.content = `${(currentRule.content || '') + line.trim()} `;
-    }
+    handleContentLine(line, state);
   }
 
-  // Push final rule
-  if (currentRule?.content) {
-    rules.push(currentRule as Rule);
+  if (state.currentRule?.content) {
+    state.rules.push(state.currentRule as Rule);
   }
 
-  return rules;
+  return state.rules;
+}
+
+/**
+ * Add a new rule to content
+ */
+function applyAddModification(content: string, mod: RuleModification): string {
+  const category = mod.rule.category || 'general';
+  const categoryPattern = new RegExp(`^##\\s+${category}`, 'im');
+  const categoryMatch = content.match(categoryPattern);
+
+  if (categoryMatch && categoryMatch.index !== undefined) {
+    const matchIndex = categoryMatch.index;
+    const nextSectionMatch = content.slice(matchIndex).match(NEXT_SECTION_REGEX);
+    const insertPos =
+      nextSectionMatch?.index !== undefined ? matchIndex + nextSectionMatch.index : content.length;
+
+    return `${content.slice(0, insertPos)}\n- ${mod.rule.content}\n${content.slice(insertPos)}`;
+  }
+
+  return `${content}\n\n## ${category}\n\n- ${mod.rule.content}\n`;
+}
+
+/**
+ * Modify an existing rule in content
+ */
+function applyModifyModification(content: string, mod: RuleModification): string {
+  if (!(mod.rule.source && mod.newContent)) {
+    return content;
+  }
+
+  const sourceMatch = mod.rule.source.match(LINE_NUMBER_REGEX);
+  if (!sourceMatch) {
+    return content;
+  }
+
+  const lineNum = Number.parseInt(sourceMatch[1], 10);
+  const lines = content.split('\n');
+
+  if (lineNum > 0 && lineNum <= lines.length) {
+    lines[lineNum - 1] = `- ${mod.newContent}`;
+    return lines.join('\n');
+  }
+
+  return content;
+}
+
+/**
+ * Remove a rule from content
+ */
+function applyRemoveModification(content: string, mod: RuleModification): string {
+  if (!mod.rule.source) {
+    return content;
+  }
+
+  const sourceMatch = mod.rule.source.match(LINE_NUMBER_REGEX);
+  if (!sourceMatch) {
+    return content;
+  }
+
+  const lineNum = Number.parseInt(sourceMatch[1], 10);
+  const lines = content.split('\n');
+
+  if (lineNum > 0 && lineNum <= lines.length) {
+    lines.splice(lineNum - 1, 1);
+    return lines.join('\n');
+  }
+
+  return content;
+}
+
+/**
+ * Apply a single modification to content
+ */
+function applyModification(content: string, mod: RuleModification): string {
+  switch (mod.type) {
+    case 'add':
+      return applyAddModification(content, mod);
+    case 'modify':
+      return applyModifyModification(content, mod);
+    case 'remove':
+      return applyRemoveModification(content, mod);
+    default:
+      return content;
+  }
+}
+
+/**
+ * Detect file format from path
+ */
+function detectFormat(path: string): RulesFile['format'] {
+  if (path.endsWith('.yaml') || path.endsWith('.yml')) {
+    return 'yaml';
+  }
+  if (path.endsWith('.json')) {
+    return 'json';
+  }
+  return 'markdown';
+}
+
+/**
+ * Parse JSON content into rules
+ */
+function parseJsonRules(content: string, path: string): Rule[] {
+  try {
+    const parsed = JSON.parse(content);
+    return Array.isArray(parsed) ? parsed : parsed.rules || [];
+  } catch {
+    logger.warn(`Failed to parse JSON rules file: ${path}`);
+    return [];
+  }
 }
 
 /**
@@ -108,36 +303,18 @@ export async function loadRulesFile(path: string): Promise<RulesFile> {
   }
 
   const content = await readFile(path, 'utf-8');
-
-  // Detect format
-  let format: RulesFile['format'] = 'markdown';
-  if (path.endsWith('.yaml') || path.endsWith('.yml')) {
-    format = 'yaml';
-  } else if (path.endsWith('.json')) {
-    format = 'json';
-  }
+  const format = detectFormat(path);
 
   let rules: Rule[] = [];
-
   if (format === 'markdown') {
     rules = parseMarkdownRules(content, path);
   } else if (format === 'json') {
-    try {
-      const parsed = JSON.parse(content);
-      rules = Array.isArray(parsed) ? parsed : parsed.rules || [];
-    } catch {
-      logger.warn(`Failed to parse JSON rules file: ${path}`);
-    }
+    rules = parseJsonRules(content, path);
   }
 
   logger.info(`Loaded ${rules.length} rules from ${path}`);
 
-  return {
-    path,
-    content,
-    rules,
-    format,
-  };
+  return { path, content, rules, format };
 }
 
 /**
@@ -145,58 +322,12 @@ export async function loadRulesFile(path: string): Promise<RulesFile> {
  */
 export async function saveRulesFile(
   original: RulesFile,
-  modifications: Array<{
-    type: 'add' | 'modify' | 'remove';
-    rule: Rule;
-    newContent?: string;
-  }>
+  modifications: RuleModification[]
 ): Promise<string> {
   let content = original.content;
 
   for (const mod of modifications) {
-    if (mod.type === 'add') {
-      // Add new rule at the end of the appropriate section
-      const category = mod.rule.category || 'general';
-      const categoryPattern = new RegExp(`^##\\s+${category}`, 'im');
-      const categoryMatch = content.match(categoryPattern);
-
-      if (categoryMatch && categoryMatch.index !== undefined) {
-        // Find the end of this section (next ## or end of file)
-        const matchIndex = categoryMatch.index;
-        const nextSectionMatch = content.slice(matchIndex).match(/\n##\s+/);
-        const insertPos =
-          nextSectionMatch && nextSectionMatch.index !== undefined
-            ? matchIndex + nextSectionMatch.index
-            : content.length;
-
-        content = `${content.slice(0, insertPos)}\n- ${mod.rule.content}\n${content.slice(insertPos)}`;
-      } else {
-        // Add new section
-        content += `\n\n## ${category}\n\n- ${mod.rule.content}\n`;
-      }
-    } else if (mod.type === 'modify' && mod.rule.source && mod.newContent) {
-      // Find and replace the rule
-      const sourceMatch = mod.rule.source.match(/:(\d+)$/);
-      if (sourceMatch) {
-        const lineNum = Number.parseInt(sourceMatch[1], 10);
-        const lines = content.split('\n');
-        if (lineNum > 0 && lineNum <= lines.length) {
-          lines[lineNum - 1] = `- ${mod.newContent}`;
-          content = lines.join('\n');
-        }
-      }
-    } else if (mod.type === 'remove' && mod.rule.source) {
-      // Remove the rule line
-      const sourceMatch = mod.rule.source.match(/:(\d+)$/);
-      if (sourceMatch) {
-        const lineNum = Number.parseInt(sourceMatch[1], 10);
-        const lines = content.split('\n');
-        if (lineNum > 0 && lineNum <= lines.length) {
-          lines.splice(lineNum - 1, 1);
-          content = lines.join('\n');
-        }
-      }
-    }
+    content = applyModification(content, mod);
   }
 
   await writeFile(original.path, content, 'utf-8');

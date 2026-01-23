@@ -9,6 +9,10 @@ import type { FileChange, PRContent, PRGeneratorConfig, PRResult } from './types
 
 const logger = createLogger('pr-generator');
 
+// Top-level regex for sanitizing branch names
+const NON_ALPHANUMERIC_REGEX = /[^a-z0-9]+/g;
+const TRAILING_DASH_REGEX = /-+$/;
+
 export class PRGenerator {
   private readonly config: PRGeneratorConfig;
   private readonly git: GitOperations;
@@ -140,9 +144,9 @@ export class PRGenerator {
   private generateBranchName(improvement: RuleImprovement): string {
     const sanitized = improvement.reason
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
+      .replace(NON_ALPHANUMERIC_REGEX, '-')
       .slice(0, 40)
-      .replace(/-+$/, '');
+      .replace(TRAILING_DASH_REGEX, '');
 
     const timestamp = Date.now().toString(36);
     return `${this.branchPrefix}/${sanitized}-${timestamp}`;

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # =============================================================================
   # PostgreSQL - Main database for Langfuse
@@ -234,7 +232,8 @@ services:
       - ./litellm-config.yaml:/app/config.yaml
     ports:
       - "4000:4000"
-    command: ["--config", "/app/config.yaml", "--port", "4000", "--detailed_debug"]
+    command:
+      ["--config", "/app/config.yaml", "--port", "4000", "--detailed_debug"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

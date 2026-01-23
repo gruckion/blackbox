@@ -14,6 +14,13 @@ interface ServiceStatus {
   responseTime?: number;
 }
 
+interface StatusOptions {
+  langfuse: string;
+  phoenix: string;
+  litellm: string;
+  ollama: string;
+}
+
 async function checkService(name: string, url: string): Promise<ServiceStatus> {
   const start = Date.now();
   try {
@@ -40,13 +47,65 @@ async function checkService(name: string, url: string): Promise<ServiceStatus> {
   }
 }
 
+function formatServiceResult(result: ServiceStatus, maxNameLen: number): void {
+  const nameStr = result.name.padEnd(maxNameLen + 2);
+  const urlStr = chalk.gray(`(${result.url})`);
+
+  if (result.status === 'ok') {
+    const timeStr = result.responseTime ? chalk.gray(` ${result.responseTime}ms`) : '';
+    console.log(chalk.green(`  ✓ ${nameStr}`) + urlStr + timeStr);
+  } else {
+    const msgStr = result.message ? chalk.red(` - ${result.message}`) : '';
+    console.log(chalk.red(`  ✗ ${nameStr}`) + urlStr + msgStr);
+  }
+}
+
+function printSummary(results: ServiceStatus[]): void {
+  const healthy = results.filter((r) => r.status === 'ok').length;
+  const total = results.length;
+
+  console.log('');
+  if (healthy === total) {
+    console.log(chalk.green(`✓ All ${total} services healthy`));
+  } else if (healthy > 0) {
+    console.log(chalk.yellow(`⚠ ${healthy}/${total} services healthy`));
+  } else {
+    console.log(chalk.red('✗ No services responding'));
+  }
+
+  if (healthy < total) {
+    console.log(chalk.gray('\nStart services with: docker compose up -d'));
+  }
+}
+
+async function checkOllamaModels(ollamaUrl: string): Promise<void> {
+  console.log(chalk.gray('\nChecking Ollama models...'));
+
+  try {
+    const response = await fetch(`${ollamaUrl}/api/tags`);
+    const data = (await response.json()) as { models?: Array<{ name: string; size: number }> };
+
+    if (data.models && data.models.length > 0) {
+      console.log(chalk.gray('Available models:'));
+      for (const model of data.models) {
+        const sizeGB = (model.size / 1e9).toFixed(1);
+        console.log(chalk.gray(`  - ${model.name} (${sizeGB}GB)`));
+      }
+    } else {
+      console.log(chalk.yellow('No models installed. Pull a model with: ollama pull llama3.2:3b'));
+    }
+  } catch {
+    // Ignore Ollama model check errors
+  }
+}
+
 export const statusCommand = new Command('status')
   .description('Check health of Blackbox services')
   .option('--langfuse <url>', 'Langfuse URL', 'http://localhost:3000')
   .option('--phoenix <url>', 'Phoenix URL', 'http://localhost:6006')
   .option('--litellm <url>', 'LiteLLM URL', 'http://localhost:4000')
   .option('--ollama <url>', 'Ollama URL', 'http://localhost:11434')
-  .action(async (options) => {
+  .action(async (options: StatusOptions) => {
     const spinner = ora('Checking services...').start();
 
     console.log(chalk.blue('\n🔍 Blackbox Service Status\n'));
@@ -70,60 +129,15 @@ export const statusCommand = new Command('status')
 
     // Display results
     const maxNameLen = Math.max(...results.map((r) => r.name.length));
-
     for (const result of results) {
-      const nameStr = result.name.padEnd(maxNameLen + 2);
-      const urlStr = chalk.gray(`(${result.url})`);
-
-      if (result.status === 'ok') {
-        const timeStr = result.responseTime ? chalk.gray(` ${result.responseTime}ms`) : '';
-        console.log(chalk.green(`  ✓ ${nameStr}`) + urlStr + timeStr);
-      } else {
-        const msgStr = result.message ? chalk.red(` - ${result.message}`) : '';
-        console.log(chalk.red(`  ✗ ${nameStr}`) + urlStr + msgStr);
-      }
+      formatServiceResult(result, maxNameLen);
     }
 
-    // Summary
-    const healthy = results.filter((r) => r.status === 'ok').length;
-    const total = results.length;
+    printSummary(results);
 
-    console.log('');
-    if (healthy === total) {
-      console.log(chalk.green(`✓ All ${total} services healthy`));
-    } else if (healthy > 0) {
-      console.log(chalk.yellow(`⚠ ${healthy}/${total} services healthy`));
-    } else {
-      console.log(chalk.red('✗ No services responding'));
-    }
-
-    // Docker tip
-    if (healthy < total) {
-      console.log(chalk.gray('\nStart services with: docker compose up -d'));
-    }
-
-    // Ollama models
+    // Check Ollama models if Ollama is healthy
     const ollamaStatus = results.find((r) => r.name === 'Ollama');
     if (ollamaStatus?.status === 'ok') {
-      console.log(chalk.gray('\nChecking Ollama models...'));
-
-      try {
-        const response = await fetch(`${options.ollama}/api/tags`);
-        const data = (await response.json()) as { models?: Array<{ name: string; size: number }> };
-
-        if (data.models && data.models.length > 0) {
-          console.log(chalk.gray('Available models:'));
-          for (const model of data.models) {
-            const sizeGB = (model.size / 1e9).toFixed(1);
-            console.log(chalk.gray(`  - ${model.name} (${sizeGB}GB)`));
-          }
-        } else {
-          console.log(
-            chalk.yellow('No models installed. Pull a model with: ollama pull llama3.2:3b')
-          );
-        }
-      } catch {
-        // Ignore Ollama model check errors
-      }
+      await checkOllamaModels(options.ollama);
     }
   });

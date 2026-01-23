@@ -8,17 +8,17 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "bun run --filter '*' build",
+    "build": "tsc --build",
     "test": "bun run --filter '*' test",
     "test:integration": "bun vitest run tests/",
-    "typecheck": "bun run --filter '*' typecheck",
+    "typecheck": "tsc --build",
     "check": "bun x ultracite check",
     "check:fix": "bun x ultracite fix --unsafe",
-    "clean": "bun run --filter '*' clean",
+    "clean": "tsc --build --clean && bun run --filter '*' clean",
     "dev": "bun run --parallel --filter '*' dev",
-    "docker:up": "docker-compose up -d",
-    "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "prepare": "lefthook install"
   },
   "devDependencies": {
