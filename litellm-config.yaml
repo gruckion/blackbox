@@ -1,0 +1,97 @@
+# LiteLLM Proxy Configuration
+# Routes requests to cloud providers and local Ollama models
+
+model_list:
+  # =============================================================================
+  # Cloud Models (OpenAI)
+  # =============================================================================
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: openai/gpt-3.5-turbo
+      api_key: os.environ/OPENAI_API_KEY
+
+  # =============================================================================
+  # Cloud Models (Anthropic)
+  # =============================================================================
+  - model_name: claude-3-5-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-3-haiku
+    litellm_params:
+      model: anthropic/claude-3-haiku-20240307
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # =============================================================================
+  # Local Models (Ollama)
+  # =============================================================================
+  - model_name: llama3.2
+    litellm_params:
+      model: ollama/llama3.2
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: llama3.2:3b
+    litellm_params:
+      model: ollama/llama3.2:3b
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: codellama
+    litellm_params:
+      model: ollama/codellama
+      api_base: os.environ/OLLAMA_API_BASE
+
+  - model_name: mistral
+    litellm_params:
+      model: ollama/mistral
+      api_base: os.environ/OLLAMA_API_BASE
+
+  # =============================================================================
+  # Aliases for easy switching
+  # =============================================================================
+  - model_name: cloud-default
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: local-default
+    litellm_params:
+      model: ollama/llama3.2:3b
+      api_base: os.environ/OLLAMA_API_BASE
+
+# =============================================================================
+# Litellm Settings
+# =============================================================================
+litellm_settings:
+  # Enable request/response logging
+  set_verbose: true
+
+  # Drop unmapped params to avoid errors
+  drop_params: true
+
+  # Callbacks for tracing
+  success_callback: ["langfuse"]
+  failure_callback: ["langfuse"]
+
+# =============================================================================
+# General Settings
+# =============================================================================
+general_settings:
+  # Master key for admin access
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+  # Enable detailed logging
+  alerting: ["slack"]
+
+  # Database for usage tracking (optional)
+  # database_url: "postgresql://postgres:postgres@postgres:5432/litellm"

@@ -1,0 +1,339 @@
+/**
+ * PR Generator - Creates PRs for rule improvements
+ */
+
+import { createLogger, type RuleImprovement } from '@blackbox/shared';
+import type {
+  PRGeneratorConfig,
+  PRContent,
+  PRResult,
+  FileChange,
+} from './types.js';
+import { GitOperations } from './git.js';
+import { GitHubOperations } from './github.js';
+
+const logger = createLogger('pr-generator');
+
+export class PRGenerator {
+  private config: PRGeneratorConfig;
+  private git: GitOperations;
+  private github: GitHubOperations;
+  private baseBranch: string;
+  private branchPrefix: string;
+
+  constructor(config: PRGeneratorConfig) {
+    this.config = config;
+    this.git = new GitOperations(config.repoPath);
+    this.github = new GitHubOperations(config);
+    this.baseBranch = config.baseBranch || 'main';
+    this.branchPrefix = config.branchPrefix || 'blackbox/improve';
+  }
+
+  /**
+   * Generate a PR for a single rule improvement
+   */
+  async generatePR(
+    improvement: RuleImprovement,
+    rulesFilePath: string,
+    originalContent: string,
+    newContent: string
+  ): Promise<PRResult> {
+    const branchName = this.generateBranchName(improvement);
+
+    try {
+      // Save current branch
+      const currentBranch = await this.git.getCurrentBranch();
+
+      // Check if working directory is clean
+      if (!(await this.git.isClean())) {
+        logger.warn('Working directory not clean, stashing changes');
+        await this.git.stash('blackbox-pr-generation');
+      }
+
+      // Create branch for the improvement
+      await this.git.checkout(this.baseBranch);
+      await this.git.pull();
+      await this.git.createBranch(branchName);
+
+      // Apply the change
+      const changes: FileChange[] = [
+        {
+          path: rulesFilePath,
+          content: newContent,
+          type: originalContent ? 'modify' : 'create',
+        },
+      ];
+
+      const commitMessage = this.generateCommitMessage(improvement);
+      await this.git.applyAndCommit({
+        message: commitMessage,
+        files: changes,
+      });
+
+      // Push branch
+      await this.git.push(branchName);
+
+      // Create PR
+      const prContent = this.generatePRContent(improvement, changes);
+      const result = await this.github.createPullRequest(
+        branchName,
+        this.baseBranch,
+        prContent
+      );
+
+      // Return to original branch
+      await this.git.checkout(currentBranch);
+
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to generate PR: ${message}`);
+
+      // Try to recover to original state
+      try {
+        const currentBranch = await this.git.getCurrentBranch();
+        if (currentBranch === branchName) {
+          await this.git.checkout(this.baseBranch);
+        }
+        if (await this.git.branchExists(branchName)) {
+          await this.git.deleteBranch(branchName, true);
+        }
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      return {
+        success: false,
+        error: message,
+        branchName,
+      };
+    }
+  }
+
+  /**
+   * Generate PRs for multiple improvements
+   */
+  async generatePRs(
+    improvements: RuleImprovement[],
+    rulesFilePath: string,
+    getNewContent: (improvement: RuleImprovement) => string
+  ): Promise<PRResult[]> {
+    const results: PRResult[] = [];
+
+    // Get original content
+    const { readFile } = await import('fs/promises');
+    let originalContent = '';
+    try {
+      originalContent = await readFile(rulesFilePath, 'utf-8');
+    } catch {
+      // File doesn't exist yet
+    }
+
+    for (const improvement of improvements) {
+      const newContent = getNewContent(improvement);
+      const result = await this.generatePR(
+        improvement,
+        rulesFilePath,
+        originalContent,
+        newContent
+      );
+      results.push(result);
+
+      // Update original content for next iteration
+      if (result.success) {
+        originalContent = newContent;
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Generate branch name for an improvement
+   */
+  private generateBranchName(improvement: RuleImprovement): string {
+    const sanitized = improvement.reason
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .slice(0, 40)
+      .replace(/-+$/, '');
+
+    const timestamp = Date.now().toString(36);
+    return `${this.branchPrefix}/${sanitized}-${timestamp}`;
+  }
+
+  /**
+   * Generate commit message for an improvement
+   */
+  private generateCommitMessage(improvement: RuleImprovement): string {
+    const type = improvement.originalRule ? 'Update' : 'Add';
+    const subject = `${type} rule: ${improvement.improvedRule.content.slice(0, 50)}`;
+
+    const body = [
+      '',
+      `Reason: ${improvement.reason}`,
+      '',
+      `Confidence: ${(improvement.confidence * 100).toFixed(0)}%`,
+      `Expected improvement: ${improvement.evidence.tracesImproved} traces`,
+      '',
+      'Generated by Blackbox CI',
+    ].join('\n');
+
+    return `${subject}\n${body}`;
+  }
+
+  /**
+   * Generate PR content
+   */
+  private generatePRContent(
+    improvement: RuleImprovement,
+    _changes: FileChange[]
+  ): PRContent {
+    const type = improvement.originalRule ? 'Updates' : 'Adds';
+    const title = `[Blackbox] ${type} rule: ${improvement.improvedRule.content.slice(0, 50)}...`;
+
+    const body = this.generatePRBody(improvement);
+
+    return {
+      title,
+      body,
+      labels: ['blackbox', 'automated', 'rules-improvement'],
+    };
+  }
+
+  /**
+   * Generate PR body/description
+   */
+  private generatePRBody(improvement: RuleImprovement): string {
+    const sections: string[] = [];
+
+    // Header
+    sections.push('## 🤖 Automated Rule Improvement');
+    sections.push('');
+    sections.push('This PR was automatically generated by **Blackbox CI** based on analysis of recent agent traces.');
+    sections.push('');
+
+    // Summary
+    sections.push('### Summary');
+    sections.push('');
+    sections.push(improvement.reason);
+    sections.push('');
+
+    // Changes
+    sections.push('### Changes');
+    sections.push('');
+
+    if (improvement.originalRule) {
+      sections.push('**Original Rule:**');
+      sections.push('```');
+      sections.push(improvement.originalRule.content);
+      sections.push('```');
+      sections.push('');
+    }
+
+    sections.push('**New/Improved Rule:**');
+    sections.push('```');
+    sections.push(improvement.improvedRule.content);
+    sections.push('```');
+    sections.push('');
+
+    // Evidence
+    sections.push('### Evidence');
+    sections.push('');
+    sections.push(`- **Confidence:** ${(improvement.confidence * 100).toFixed(0)}%`);
+    sections.push(`- **Traces Improved:** ${improvement.evidence.tracesImproved}`);
+    sections.push(`- **Traces Regressed:** ${improvement.evidence.tracesRegressed}`);
+    sections.push(`- **Net Score Delta:** ${improvement.evidence.netScoreDelta.toFixed(2)}`);
+    sections.push('');
+
+    if (improvement.evidence.exampleTraceIds.length > 0) {
+      sections.push('**Example Trace IDs:**');
+      for (const traceId of improvement.evidence.exampleTraceIds.slice(0, 5)) {
+        sections.push(`- \`${traceId}\``);
+      }
+      sections.push('');
+    }
+
+    // Review guidance
+    sections.push('### Review Guidance');
+    sections.push('');
+    sections.push('1. Review the proposed rule change');
+    sections.push('2. Check if it aligns with your coding standards');
+    sections.push('3. Consider any edge cases');
+    sections.push('4. Merge if the improvement is valid');
+    sections.push('');
+
+    // Footer
+    sections.push('---');
+    sections.push('*Generated by [Blackbox CI](https://github.com/example/blackbox) - Nightly CI for Coding Agents*');
+
+    return sections.join('\n');
+  }
+
+  /**
+   * Check PR status and auto-merge if configured and all checks pass
+   */
+  async checkAndAutoMerge(prNumber: number): Promise<boolean> {
+    if (!this.config.autoMerge) {
+      return false;
+    }
+
+    const { status, checks } = await this.github.getPRChecks(prNumber);
+
+    if (status === 'pending') {
+      logger.info(`PR #${prNumber} checks still pending`);
+      return false;
+    }
+
+    if (status === 'failure') {
+      logger.warn(`PR #${prNumber} has failing checks`);
+      return false;
+    }
+
+    // Check required status checks if configured
+    if (this.config.requiredChecks && this.config.requiredChecks.length > 0) {
+      const passedChecks = checks
+        .filter(c => c.conclusion === 'success')
+        .map(c => c.name);
+
+      const missingChecks = this.config.requiredChecks.filter(
+        rc => !passedChecks.includes(rc)
+      );
+
+      if (missingChecks.length > 0) {
+        logger.warn(`PR #${prNumber} missing required checks: ${missingChecks.join(', ')}`);
+        return false;
+      }
+    }
+
+    // All checks passed, auto-merge
+    const merged = await this.github.mergePR(prNumber);
+    if (merged) {
+      logger.info(`Auto-merged PR #${prNumber}`);
+    }
+
+    return merged;
+  }
+
+  /**
+   * Close stale improvement PRs
+   */
+  async closeStalePRs(_maxAge: number = 7 * 24 * 60 * 60 * 1000): Promise<void> {
+    const openPRs = await this.github.listOpenPRs();
+
+    for (const pr of openPRs) {
+      if (pr.title.startsWith('[Blackbox]')) {
+        // Check PR age - this is simplified, real implementation would check creation date
+        logger.info(`Found Blackbox PR #${pr.number}: ${pr.title}`);
+        // For now, just log - in production, check age and close if stale
+      }
+    }
+  }
+}
+
+/**
+ * Create PR generator instance
+ */
+export function createPRGenerator(config: PRGeneratorConfig): PRGenerator {
+  return new PRGenerator(config);
+}

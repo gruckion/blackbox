@@ -1,0 +1,137 @@
+{
+  "id": "trace-sample-001",
+  "sessionId": "session-001",
+  "name": "create-hello-world-function",
+  "startTime": "2024-01-15T10:00:00.000Z",
+  "endTime": "2024-01-15T10:00:05.000Z",
+  "calls": [
+    {
+      "id": "call-001",
+      "timestamp": "2024-01-15T10:00:00.000Z",
+      "model": "gpt-4o-mini",
+      "provider": "openai",
+      "parameters": {
+        "temperature": 0.7,
+        "max_tokens": 2048
+      },
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful coding assistant. Use the available tools to complete tasks efficiently."
+        },
+        {
+          "role": "user",
+          "content": "Create a simple hello world function in JavaScript"
+        }
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "write_file",
+            "description": "Write content to a file",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "path": { "type": "string" },
+                "content": { "type": "string" }
+              },
+              "required": ["path", "content"]
+            }
+          }
+        }
+      ],
+      "response": {
+        "content": "I'll create a simple hello world function in JavaScript for you.",
+        "toolCalls": [
+          {
+            "id": "tc-001",
+            "type": "function",
+            "function": {
+              "name": "write_file",
+              "arguments": "{\"path\": \"hello.js\", \"content\": \"function helloWorld() {\\n  console.log('Hello, World!');\\n}\\n\\nhelloWorld();\"}"
+            }
+          }
+        ],
+        "finishReason": "tool_calls"
+      },
+      "usage": {
+        "promptTokens": 150,
+        "completionTokens": 80,
+        "totalTokens": 230
+      },
+      "latency": 1200
+    },
+    {
+      "id": "call-002",
+      "timestamp": "2024-01-15T10:00:02.000Z",
+      "model": "gpt-4o-mini",
+      "provider": "openai",
+      "parameters": {
+        "temperature": 0.7,
+        "max_tokens": 2048
+      },
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful coding assistant. Use the available tools to complete tasks efficiently."
+        },
+        {
+          "role": "user",
+          "content": "Create a simple hello world function in JavaScript"
+        },
+        {
+          "role": "assistant",
+          "content": "I'll create a simple hello world function in JavaScript for you.",
+          "tool_calls": [
+            {
+              "id": "tc-001",
+              "type": "function",
+              "function": {
+                "name": "write_file",
+                "arguments": "{\"path\": \"hello.js\", \"content\": \"function helloWorld() {\\n  console.log('Hello, World!');\\n}\\n\\nhelloWorld();\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "tc-001",
+          "content": "Successfully wrote to hello.js"
+        }
+      ],
+      "response": {
+        "content": "I've created the hello world function in `hello.js`. The file contains:\n\n1. A function `helloWorld()` that logs 'Hello, World!' to the console\n2. A call to execute the function\n\nYou can run it with `node hello.js`.",
+        "finishReason": "stop"
+      },
+      "usage": {
+        "promptTokens": 250,
+        "completionTokens": 60,
+        "totalTokens": 310
+      },
+      "latency": 900
+    }
+  ],
+  "toolResults": [
+    {
+      "toolCallId": "tc-001",
+      "toolName": "write_file",
+      "input": { "path": "hello.js", "content": "function helloWorld() {\n  console.log('Hello, World!');\n}\n\nhelloWorld();" },
+      "output": "Successfully wrote to hello.js",
+      "duration": 50
+    }
+  ],
+  "metadata": {
+    "repoPath": "/example/project",
+    "gitBranch": "main",
+    "tags": ["example", "hello-world"],
+    "custom": {
+      "taskType": "code-generation"
+    }
+  },
+  "outcome": {
+    "success": true,
+    "testsPassed": true,
+    "lintPassed": true
+  }
+}

@@ -1,0 +1,258 @@
+version: '3.8'
+
+services:
+  # =============================================================================
+  # PostgreSQL - Main database for Langfuse
+  # =============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: blackbox-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langfuse
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # ClickHouse - OLAP database for Langfuse traces
+  # =============================================================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3
+    container_name: blackbox-clickhouse
+    environment:
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: clickhouse
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    healthcheck:
+      test: ["CMD", "clickhouse-client", "--query", "SELECT 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # Redis - Cache and queue for Langfuse
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: blackbox-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # MinIO - S3-compatible storage for Langfuse
+  # =============================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: blackbox-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9002:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # Langfuse Web - Main web application
+  # =============================================================================
+  langfuse-web:
+    image: langfuse/langfuse:latest
+    container_name: blackbox-langfuse-web
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/langfuse
+
+      # ClickHouse
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: clickhouse
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # S3/MinIO
+      LANGFUSE_S3_EVENT_UPLOAD_ENABLED: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minioadmin
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: minioadmin
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+
+      # Auth
+      NEXTAUTH_SECRET: blackbox-secret-key-change-in-production
+      NEXTAUTH_URL: http://localhost:3000
+
+      # Encryption
+      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+
+      # Salt for API key hashing
+      SALT: blackbox-salt-change-in-production
+
+      # Telemetry (disable for local dev)
+      TELEMETRY_ENABLED: "false"
+
+      # Enable sign-up for local dev
+      AUTH_DISABLE_SIGNUP: "false"
+    ports:
+      - "3000:3000"
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # Langfuse Worker - Background job processor
+  # =============================================================================
+  langfuse-worker:
+    image: langfuse/langfuse-worker:latest
+    container_name: blackbox-langfuse-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      # Database
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/langfuse
+
+      # ClickHouse
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: clickhouse
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # S3/MinIO
+      LANGFUSE_S3_EVENT_UPLOAD_ENABLED: "true"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: minioadmin
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: minioadmin
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+
+      # Encryption
+      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+
+      # Salt
+      SALT: blackbox-salt-change-in-production
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # Arize Phoenix - AI Observability & Evaluation
+  # =============================================================================
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: blackbox-phoenix
+    environment:
+      PHOENIX_WORKING_DIR: /data
+      PHOENIX_HOST: 0.0.0.0
+      PHOENIX_PORT: 6006
+    volumes:
+      - phoenix_data:/data
+    ports:
+      - "6006:6006"
+    networks:
+      - blackbox-network
+
+  # =============================================================================
+  # LiteLLM Proxy - AI Gateway
+  # =============================================================================
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: blackbox-litellm
+    depends_on:
+      - langfuse-web
+    environment:
+      # LiteLLM config
+      LITELLM_MASTER_KEY: sk-blackbox-litellm-key
+      LITELLM_LOG_RESPONSES: "True"
+
+      # Langfuse callback for tracing
+      LANGFUSE_HOST: http://langfuse-web:3000
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+
+      # Provider API keys (passed from host)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+
+      # Ollama connection (host network)
+      OLLAMA_API_BASE: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml
+    ports:
+      - "4000:4000"
+    command: ["--config", "/app/config.yaml", "--port", "4000", "--detailed_debug"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - blackbox-network
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  blackbox-network:
+    driver: bridge
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+  clickhouse_data:
+  redis_data:
+  minio_data:
+  phoenix_data:

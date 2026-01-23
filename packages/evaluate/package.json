@@ -16,7 +16,8 @@
   "dependencies": {
     "@blackbox/shared": "workspace:*",
     "openai": "^4.20.0",
-    "arize-phoenix-otel": "^0.6.0",
+    "@arizeai/phoenix-client": "^5.8.0",
+    "@arizeai/phoenix-otel": "^0.3.4",
     "@opentelemetry/api": "^1.7.0"
   },
   "devDependencies": {

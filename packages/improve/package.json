@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@blackbox/shared": "workspace:*",
+    "@blackbox/evaluate": "workspace:*",
     "openai": "^4.20.0",
     "gray-matter": "^4.0.3"
   },
