@@ -11,11 +11,11 @@ export {
   findMostDifferent,
   generateDiffReport,
   summarizeComparison,
-} from './comparison.js';
+} from "./comparison.js";
 // Export engine
-export { createReplayEngine, ReplayEngine } from './engine.js';
+export { createReplayEngine, ReplayEngine } from "./engine.js";
 // Export Ollama client
-export { createOllamaClient, OllamaClient } from './ollama-client.js';
+export { createOllamaClient, OllamaClient } from "./ollama-client.js";
 
 // Export types
 export type {
@@ -28,4 +28,4 @@ export type {
   ReplayEngineOptions,
   ReplayOutput,
   ReplayRequest,
-} from './types.js';
+} from "./types.js";

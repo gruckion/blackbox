@@ -2,8 +2,8 @@
  * Types for the improvement engine
  */
 
-import type { PipelineResult } from '@blackbox/evaluate';
-import type { LoopPattern, Rule, RuleImprovement, Trace } from '@blackbox/shared';
+import type { PipelineResult } from "@blackbox/evaluate";
+import type { LoopPattern, Rule, RuleImprovement, Trace } from "@blackbox/shared";
 
 export interface RulesFile {
   /**
@@ -24,7 +24,7 @@ export interface RulesFile {
   /**
    * File format
    */
-  format: 'markdown' | 'yaml' | 'json';
+  format: "markdown" | "yaml" | "json";
 }
 
 export interface ImprovementAnalysis {
@@ -58,7 +58,7 @@ export interface FailurePattern {
   /**
    * Pattern type
    */
-  type: 'error' | 'low_quality' | 'timeout' | 'loop' | 'regression';
+  type: "error" | "low_quality" | "timeout" | "loop" | "regression";
 
   /**
    * Description
@@ -112,7 +112,7 @@ export interface ImprovementOpportunity {
   /**
    * Type of improvement
    */
-  type: 'new_rule' | 'modify_rule' | 'remove_rule' | 'add_example';
+  type: "new_rule" | "modify_rule" | "remove_rule" | "add_example";
 
   /**
    * Description

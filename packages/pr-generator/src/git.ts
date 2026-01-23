@@ -2,14 +2,14 @@
  * Git operations using simple-git
  */
 
-import { existsSync, mkdirSync } from 'node:fs';
-import { unlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { createLogger } from '@blackbox/shared';
-import { type SimpleGit, simpleGit } from 'simple-git';
-import type { CommitInfo, FileChange } from './types.js';
+import { existsSync, mkdirSync } from "node:fs";
+import { unlink, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { createLogger } from "@blackbox/shared";
+import { type SimpleGit, simpleGit } from "simple-git";
+import type { CommitInfo, FileChange } from "./types.js";
 
-const logger = createLogger('git');
+const logger = createLogger("git");
 
 export class GitOperations {
   private readonly git: SimpleGit;
@@ -25,7 +25,7 @@ export class GitOperations {
    */
   async getCurrentBranch(): Promise<string> {
     const status = await this.git.status();
-    return status.current || 'main';
+    return status.current || "main";
   }
 
   /**
@@ -33,7 +33,7 @@ export class GitOperations {
    */
   async getCurrentSha(): Promise<string> {
     const log = await this.git.log({ n: 1 });
-    return log.latest?.hash || '';
+    return log.latest?.hash || "";
   }
 
   /**
@@ -70,7 +70,7 @@ export class GitOperations {
    */
   async deleteBranch(branchName: string, force = false): Promise<void> {
     logger.info(`Deleting branch: ${branchName}`);
-    const flag = force ? '-D' : '-d';
+    const flag = force ? "-D" : "-d";
     await this.git.branch([flag, branchName]);
   }
 
@@ -81,11 +81,11 @@ export class GitOperations {
     for (const change of changes) {
       const fullPath = join(this.repoPath, change.path);
 
-      if (change.type === 'delete') {
+      if (change.type === "delete") {
         logger.info(`Deleting file: ${change.path}`);
         await unlink(fullPath);
       } else {
-        logger.info(`${change.type === 'create' ? 'Creating' : 'Modifying'} file: ${change.path}`);
+        logger.info(`${change.type === "create" ? "Creating" : "Modifying"} file: ${change.path}`);
 
         // Ensure directory exists
         const dir = dirname(fullPath);
@@ -93,7 +93,7 @@ export class GitOperations {
           mkdirSync(dir, { recursive: true });
         }
 
-        await writeFile(fullPath, change.content, 'utf-8');
+        await writeFile(fullPath, change.content, "utf-8");
       }
     }
   }
@@ -133,17 +133,17 @@ export class GitOperations {
   /**
    * Push branch to remote
    */
-  async push(branchName: string, remote = 'origin', force = false): Promise<void> {
+  async push(branchName: string, remote = "origin", force = false): Promise<void> {
     logger.info(`Pushing branch ${branchName} to ${remote}`);
 
-    const options = force ? ['--force'] : [];
+    const options = force ? ["--force"] : [];
     await this.git.push(remote, branchName, options);
   }
 
   /**
    * Pull latest from remote
    */
-  async pull(remote = 'origin', branch?: string): Promise<void> {
+  async pull(remote = "origin", branch?: string): Promise<void> {
     const targetBranch = branch || (await this.getCurrentBranch());
     logger.info(`Pulling ${remote}/${targetBranch}`);
     await this.git.pull(remote, targetBranch);
@@ -152,7 +152,7 @@ export class GitOperations {
   /**
    * Fetch from remote
    */
-  async fetch(remote = 'origin'): Promise<void> {
+  async fetch(remote = "origin"): Promise<void> {
     logger.info(`Fetching from ${remote}`);
     await this.git.fetch(remote);
   }
@@ -169,14 +169,14 @@ export class GitOperations {
    * Get list of changed files since a commit
    */
   async getChangedFiles(sinceCommit: string): Promise<string[]> {
-    const diff = await this.git.diff(['--name-only', sinceCommit]);
-    return diff.split('\n').filter(Boolean);
+    const diff = await this.git.diff(["--name-only", sinceCommit]);
+    return diff.split("\n").filter(Boolean);
   }
 
   /**
    * Reset to a specific commit
    */
-  async reset(commit: string, mode: 'soft' | 'mixed' | 'hard' = 'mixed'): Promise<void> {
+  async reset(commit: string, mode: "soft" | "mixed" | "hard" = "mixed"): Promise<void> {
     logger.info(`Resetting to ${commit} (${mode})`);
     await this.git.reset([`--${mode}`, commit]);
   }
@@ -186,7 +186,7 @@ export class GitOperations {
    */
   getDiff(files?: string[]): Promise<string> {
     if (files && files.length > 0) {
-      return this.git.diff(['--', ...files]);
+      return this.git.diff(["--", ...files]);
     }
     return this.git.diff();
   }
@@ -195,7 +195,7 @@ export class GitOperations {
    * Stash changes
    */
   async stash(message?: string): Promise<void> {
-    const args = message ? ['push', '-m', message] : ['push'];
+    const args = message ? ["push", "-m", message] : ["push"];
     await this.git.stash(args);
   }
 
@@ -203,7 +203,7 @@ export class GitOperations {
    * Pop stashed changes
    */
   async stashPop(): Promise<void> {
-    await this.git.stash(['pop']);
+    await this.git.stash(["pop"]);
   }
 }
 

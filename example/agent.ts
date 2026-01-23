@@ -4,7 +4,7 @@
  * This demonstrates how to integrate Blackbox capture into a coding agent.
  */
 
-import { createCaptureClient } from '@blackbox/capture';
+import { createCaptureClient } from "@blackbox/capture";
 
 // Create a capture-enabled OpenAI client
 const client = createCaptureClient(
@@ -14,7 +14,7 @@ const client = createCaptureClient(
   {
     // Optional: Configure Langfuse for cloud tracing
     langfuse: {
-      host: process.env.LANGFUSE_HOST || 'http://localhost:3000',
+      host: process.env.LANGFUSE_HOST || "http://localhost:3000",
       publicKey: process.env.LANGFUSE_PUBLIC_KEY,
       secretKey: process.env.LANGFUSE_SECRET_KEY,
     },
@@ -24,45 +24,45 @@ const client = createCaptureClient(
 // Tools available to the agent
 const tools = [
   {
-    type: 'function' as const,
+    type: "function" as const,
     function: {
-      name: 'read_file',
-      description: 'Read the contents of a file',
+      name: "read_file",
+      description: "Read the contents of a file",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'The file path to read' },
+          path: { type: "string", description: "The file path to read" },
         },
-        required: ['path'],
+        required: ["path"],
       },
     },
   },
   {
-    type: 'function' as const,
+    type: "function" as const,
     function: {
-      name: 'write_file',
-      description: 'Write content to a file',
+      name: "write_file",
+      description: "Write content to a file",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          path: { type: 'string', description: 'The file path to write' },
-          content: { type: 'string', description: 'The content to write' },
+          path: { type: "string", description: "The file path to write" },
+          content: { type: "string", description: "The content to write" },
         },
-        required: ['path', 'content'],
+        required: ["path", "content"],
       },
     },
   },
   {
-    type: 'function' as const,
+    type: "function" as const,
     function: {
-      name: 'run_command',
-      description: 'Run a shell command',
+      name: "run_command",
+      description: "Run a shell command",
       parameters: {
-        type: 'object',
+        type: "object",
         properties: {
-          command: { type: 'string', description: 'The command to run' },
+          command: { type: "string", description: "The command to run" },
         },
-        required: ['command'],
+        required: ["command"],
       },
     },
   },
@@ -71,14 +71,14 @@ const tools = [
 // Simulated tool execution
 function executeToolCall(name: string, args: Record<string, string>): string {
   switch (name) {
-    case 'read_file':
+    case "read_file":
       return `Contents of ${args.path}:\n// Sample file contents`;
-    case 'write_file':
+    case "write_file":
       return `Successfully wrote to ${args.path}`;
-    case 'run_command':
+    case "run_command":
       return `Command output: ${args.command}\nSuccess`;
     default:
-      return 'Unknown tool';
+      return "Unknown tool";
   }
 }
 
@@ -96,23 +96,23 @@ async function runAgent(task: string) {
   });
 
   const messages: Array<{
-    role: 'system' | 'user' | 'assistant' | 'tool';
+    role: "system" | "user" | "assistant" | "tool";
     content: string | null;
     tool_calls?: Array<{
       id: string;
-      type: 'function';
+      type: "function";
       function: { name: string; arguments: string };
     }>;
     tool_call_id?: string;
   }> = [
     {
-      role: 'system',
+      role: "system",
       content: `You are a helpful coding assistant. Use the available tools to complete the task.
 Always explain what you're doing before taking action.
 Be efficient and don't repeat the same actions.`,
     },
     {
-      role: 'user',
+      role: "user",
       content: task,
     },
   ];
@@ -126,21 +126,21 @@ Be efficient and don't repeat the same actions.`,
 
     // Call the LLM
     const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: "gpt-4o-mini",
       messages,
       tools,
-      tool_choice: 'auto',
+      tool_choice: "auto",
     });
 
     const assistantMessage = response.choices[0].message;
-    console.log(`Assistant: ${assistantMessage.content || '(tool call)'}`);
+    console.log(`Assistant: ${assistantMessage.content || "(tool call)"}`);
 
     // Add assistant message to history
     messages.push(assistantMessage as (typeof messages)[number]);
 
     // Check if we're done
     if (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0) {
-      console.log('\n✅ Agent completed task');
+      console.log("\n✅ Agent completed task");
       break;
     }
 
@@ -154,7 +154,7 @@ Be efficient and don't repeat the same actions.`,
 
       // Add tool result to messages
       messages.push({
-        role: 'tool',
+        role: "tool",
         tool_call_id: toolCall.id,
         content: result,
       });
@@ -174,18 +174,18 @@ Be efficient and don't repeat the same actions.`,
 
 // Example tasks
 const tasks = [
-  'Create a simple hello world function in JavaScript',
-  'Read the package.json file and list the dependencies',
-  'Fix the bug in the main.ts file where the loop never terminates',
+  "Create a simple hello world function in JavaScript",
+  "Read the package.json file and list the dependencies",
+  "Fix the bug in the main.ts file where the loop never terminates",
 ];
 
 async function main() {
-  console.log('🚀 Blackbox Example Agent\n');
-  console.log('This example demonstrates capturing LLM traces.\n');
+  console.log("🚀 Blackbox Example Agent\n");
+  console.log("This example demonstrates capturing LLM traces.\n");
 
   if (!process.env.OPENAI_API_KEY) {
-    console.log('⚠️  No OPENAI_API_KEY found, running in demo mode');
-    console.log('Set OPENAI_API_KEY to run with real LLM calls\n');
+    console.log("⚠️  No OPENAI_API_KEY found, running in demo mode");
+    console.log("Set OPENAI_API_KEY to run with real LLM calls\n");
     return;
   }
 
@@ -196,8 +196,8 @@ async function main() {
   // Flush any buffered captures
   await client.flush();
 
-  console.log('\n✨ Done! Traces have been captured.');
-  console.log('Run `blackbox replay` to replay against local models.');
+  console.log("\n✨ Done! Traces have been captured.");
+  console.log("Run `blackbox replay` to replay against local models.");
 }
 
 main().catch(console.error);

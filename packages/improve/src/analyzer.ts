@@ -3,15 +3,15 @@
  * Analyzes traces to identify improvement opportunities
  */
 
-import type { PipelineResult } from '@blackbox/evaluate';
-import type { LoopPattern, Trace } from '@blackbox/shared';
+import type { PipelineResult } from "@blackbox/evaluate";
+import type { LoopPattern, Trace } from "@blackbox/shared";
 import type {
   FailurePattern,
   ImprovementAnalysis,
   ImprovementOpportunity,
   RulesFile,
   RuleViolation,
-} from './types.js';
+} from "./types.js";
 
 // Top-level regex patterns
 const WHITESPACE_REGEX = /\s+/;
@@ -67,14 +67,14 @@ function findFailurePatterns(traces: Trace[], evaluations: PipelineResult[]): Fa
   if (errorTraces.length > 0) {
     const frequency = errorTraces.length / traces.length;
     patterns.push({
-      type: 'error',
+      type: "error",
       description: `${errorTraces.length} traces ended with errors`,
       frequency,
       traceIds: errorTraces.map((t) => t.id),
       potentialFixes: [
-        'Add error handling rules',
-        'Include common error recovery strategies',
-        'Add validation before risky operations',
+        "Add error handling rules",
+        "Include common error recovery strategies",
+        "Add validation before risky operations",
       ],
     });
   }
@@ -83,14 +83,14 @@ function findFailurePatterns(traces: Trace[], evaluations: PipelineResult[]): Fa
   if (lowQualityTraces.length > 0) {
     const frequency = lowQualityTraces.length / traces.length;
     patterns.push({
-      type: 'low_quality',
+      type: "low_quality",
       description: `${lowQualityTraces.length} traces had low quality scores`,
       frequency,
       traceIds: lowQualityTraces,
       potentialFixes: [
-        'Add quality guidelines to rules',
-        'Include examples of good outputs',
-        'Add review steps before completion',
+        "Add quality guidelines to rules",
+        "Include examples of good outputs",
+        "Add review steps before completion",
       ],
     });
   }
@@ -101,20 +101,20 @@ function findFailurePatterns(traces: Trace[], evaluations: PipelineResult[]): Fa
 /**
  * Map evaluator loop type to shared loop pattern type
  */
-function mapLoopType(type: string): LoopPattern['type'] {
-  const typeMap: Record<string, LoopPattern['type']> = {
-    'repeated-tool-call': 'repeated-tool-call',
-    oscillation: 'oscillation',
-    'excessive-self-critique': 'excessive-self-critique',
-    'stalled-retrieval': 'stalled-retrieval',
-    'circular-reasoning': 'circular-reasoning',
+function mapLoopType(type: string): LoopPattern["type"] {
+  const typeMap: Record<string, LoopPattern["type"]> = {
+    "repeated-tool-call": "repeated-tool-call",
+    oscillation: "oscillation",
+    "excessive-self-critique": "excessive-self-critique",
+    "stalled-retrieval": "stalled-retrieval",
+    "circular-reasoning": "circular-reasoning",
     // Map common variations
-    repeated_tool_call: 'repeated-tool-call',
-    'repeated-calls': 'repeated-tool-call',
-    stuck: 'stalled-retrieval',
-    loop: 'circular-reasoning',
+    repeated_tool_call: "repeated-tool-call",
+    "repeated-calls": "repeated-tool-call",
+    stuck: "stalled-retrieval",
+    loop: "circular-reasoning",
   };
-  return typeMap[type] || 'circular-reasoning';
+  return typeMap[type] || "circular-reasoning";
 }
 
 /**
@@ -124,7 +124,7 @@ function findLoopPatterns(evaluations: PipelineResult[]): LoopPattern[] {
   const allPatterns: EvaluatorLoopPattern[] = [];
 
   for (const evaluation of evaluations) {
-    const loopResult = evaluation.results.find((r) => r.evaluatorName === 'loop-detector');
+    const loopResult = evaluation.results.find((r) => r.evaluatorName === "loop-detector");
 
     if (loopResult) {
       for (const score of loopResult.scores) {
@@ -182,7 +182,7 @@ function findRuleViolations(traces: Trace[], rules: RulesFile): RuleViolation[] 
 
       for (const call of trace.calls) {
         const content =
-          typeof call.response.content === 'string' ? call.response.content.toLowerCase() : '';
+          typeof call.response.content === "string" ? call.response.content.toLowerCase() : "";
 
         // Check if response seems to contradict rule
         const containsNegation = NEGATION_REGEX.test(content);
@@ -226,7 +226,7 @@ function generateOpportunities(
       opportunities.push({
         id: `opp-${id++}`,
         priority,
-        type: 'new_rule',
+        type: "new_rule",
         description: fix,
         estimatedImpact: {
           tracesImproved: Math.round(pattern.traceIds.length * 0.5),
@@ -244,7 +244,7 @@ function generateOpportunities(
     opportunities.push({
       id: `opp-${id++}`,
       priority: Math.min(priority, 1),
-      type: 'new_rule',
+      type: "new_rule",
       description: `Add rule to prevent ${pattern.type}: ${pattern.description}`,
       estimatedImpact: {
         tracesImproved: pattern.occurrences,
@@ -259,7 +259,7 @@ function generateOpportunities(
     opportunities.push({
       id: `opp-${id++}`,
       priority: 0.5 + violation.count * 0.1,
-      type: 'modify_rule',
+      type: "modify_rule",
       description: `Clarify rule: "${violation.rule.content.slice(0, 50)}..."`,
       estimatedImpact: {
         tracesImproved: violation.count,
@@ -282,7 +282,7 @@ export function getAnalysisSummary(analysis: ImprovementAnalysis): string {
   const lines: string[] = [];
 
   lines.push(`Analysis of ${analysis.traceCount} traces:`);
-  lines.push('');
+  lines.push("");
 
   if (analysis.failurePatterns.length > 0) {
     lines.push(`Failure Patterns: ${analysis.failurePatterns.length}`);
@@ -291,7 +291,7 @@ export function getAnalysisSummary(analysis: ImprovementAnalysis): string {
         `  - ${pattern.type}: ${pattern.description} (${(pattern.frequency * 100).toFixed(1)}%)`
       );
     }
-    lines.push('');
+    lines.push("");
   }
 
   if (analysis.loopPatterns.length > 0) {
@@ -299,7 +299,7 @@ export function getAnalysisSummary(analysis: ImprovementAnalysis): string {
     for (const pattern of analysis.loopPatterns) {
       lines.push(`  - ${pattern.type}: ${pattern.description} (${pattern.occurrences}x)`);
     }
-    lines.push('');
+    lines.push("");
   }
 
   if (analysis.opportunities.length > 0) {
@@ -309,5 +309,5 @@ export function getAnalysisSummary(analysis: ImprovementAnalysis): string {
     }
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }

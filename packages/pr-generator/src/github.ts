@@ -2,11 +2,11 @@
  * GitHub API operations using Octokit
  */
 
-import { createLogger } from '@blackbox/shared';
-import { Octokit } from '@octokit/rest';
-import type { PRContent, PRGeneratorConfig, PRResult } from './types.js';
+import { createLogger } from "@blackbox/shared";
+import { Octokit } from "@octokit/rest";
+import type { PRContent, PRGeneratorConfig, PRResult } from "./types.js";
 
-const logger = createLogger('github');
+const logger = createLogger("github");
 
 export class GitHubOperations {
   private readonly octokit: Octokit;
@@ -85,7 +85,7 @@ export class GitHubOperations {
         issue_number: prNumber,
         labels,
       });
-      logger.info(`Added labels to PR #${prNumber}: ${labels.join(', ')}`);
+      logger.info(`Added labels to PR #${prNumber}: ${labels.join(", ")}`);
     } catch (error) {
       logger.warn(`Failed to add labels: ${error}`);
     }
@@ -102,7 +102,7 @@ export class GitHubOperations {
         pull_number: prNumber,
         reviewers,
       });
-      logger.info(`Requested reviewers for PR #${prNumber}: ${reviewers.join(', ')}`);
+      logger.info(`Requested reviewers for PR #${prNumber}: ${reviewers.join(", ")}`);
     } catch (error) {
       logger.warn(`Failed to request reviewers: ${error}`);
     }
@@ -112,7 +112,7 @@ export class GitHubOperations {
    * Get PR status checks
    */
   async getPRChecks(prNumber: number): Promise<{
-    status: 'pending' | 'success' | 'failure';
+    status: "pending" | "success" | "failure";
     checks: Array<{ name: string; status: string; conclusion: string | null }>;
   }> {
     const pr = await this.octokit.pulls.get({
@@ -136,14 +136,14 @@ export class GitHubOperations {
     }));
 
     // Determine overall status
-    const hasFailures = checks.some((c) => c.conclusion === 'failure');
-    const hasPending = checks.some((c) => c.status !== 'completed');
+    const hasFailures = checks.some((c) => c.conclusion === "failure");
+    const hasPending = checks.some((c) => c.status !== "completed");
 
-    let status: 'pending' | 'success' | 'failure' = 'success';
+    let status: "pending" | "success" | "failure" = "success";
     if (hasFailures) {
-      status = 'failure';
+      status = "failure";
     } else if (hasPending) {
-      status = 'pending';
+      status = "pending";
     }
 
     return { status, checks };
@@ -154,7 +154,7 @@ export class GitHubOperations {
    */
   async mergePR(
     prNumber: number,
-    method: 'merge' | 'squash' | 'rebase' = 'squash'
+    method: "merge" | "squash" | "rebase" = "squash"
   ): Promise<boolean> {
     try {
       await this.octokit.pulls.merge({
@@ -179,7 +179,7 @@ export class GitHubOperations {
       owner: this.owner,
       repo: this.repo,
       pull_number: prNumber,
-      state: 'closed',
+      state: "closed",
     });
     logger.info(`Closed PR #${prNumber}`);
   }
@@ -247,7 +247,7 @@ export class GitHubOperations {
     const params: Parameters<typeof this.octokit.pulls.list>[0] = {
       owner: this.owner,
       repo: this.repo,
-      state: 'open',
+      state: "open",
     };
 
     if (head) {

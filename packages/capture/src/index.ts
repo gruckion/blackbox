@@ -3,9 +3,9 @@
  */
 
 // Export Langfuse client
-export { createLangfuseClientFromEnv, LangfuseClient } from './langfuse-client.js';
+export { createLangfuseClientFromEnv, LangfuseClient } from "./langfuse-client.js";
 // Export main SDK
-export { createCaptureClient, createCaptureClientFromEnv } from './sdk.js';
+export { createCaptureClient, createCaptureClientFromEnv } from "./sdk.js";
 
 // Export types
 export type {
@@ -15,4 +15,4 @@ export type {
   CapturedCall,
   CaptureSession,
   CaptureStats,
-} from './types.js';
+} from "./types.js";

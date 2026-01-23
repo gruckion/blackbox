@@ -2,25 +2,25 @@
  * Core types for Blackbox trace capture and replay
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // =============================================================================
 // Message Types
 // =============================================================================
 
-export const MessageRoleSchema = z.enum(['system', 'user', 'assistant', 'tool']);
+export const MessageRoleSchema = z.enum(["system", "user", "assistant", "tool"]);
 export type MessageRole = z.infer<typeof MessageRoleSchema>;
 
 export const TextContentSchema = z.object({
-  type: z.literal('text'),
+  type: z.literal("text"),
   text: z.string(),
 });
 
 export const ImageContentSchema = z.object({
-  type: z.literal('image_url'),
+  type: z.literal("image_url"),
   image_url: z.object({
     url: z.string(),
-    detail: z.enum(['auto', 'low', 'high']).optional(),
+    detail: z.enum(["auto", "low", "high"]).optional(),
   }),
 });
 
@@ -32,7 +32,7 @@ export type MessageContent = z.infer<typeof MessageContentSchema>;
 
 export const ToolCallSchema = z.object({
   id: z.string(),
-  type: z.literal('function'),
+  type: z.literal("function"),
   function: z.object({
     name: z.string(),
     arguments: z.string(),
@@ -63,13 +63,13 @@ export const ToolParameterSchema = z.object({
 });
 
 export const ToolDefinitionSchema = z.object({
-  type: z.literal('function'),
+  type: z.literal("function"),
   function: z.object({
     name: z.string(),
     description: z.string().optional(),
     parameters: z
       .object({
-        type: z.literal('object'),
+        type: z.literal("object"),
         properties: z.record(ToolParameterSchema).optional(),
         required: z.array(z.string()).optional(),
       })
@@ -217,7 +217,7 @@ export type EvaluationResult = z.infer<typeof EvaluationResultSchema>;
 // Replay Types
 // =============================================================================
 
-export const ReplayModeSchema = z.enum(['exact', 'semi-live', 'live']);
+export const ReplayModeSchema = z.enum(["exact", "semi-live", "live"]);
 export type ReplayMode = z.infer<typeof ReplayModeSchema>;
 
 export const ReplayResultSchema = z.object({
@@ -272,11 +272,11 @@ export type RuleImprovement = z.infer<typeof RuleImprovementSchema>;
 
 export const LoopPatternSchema = z.object({
   type: z.enum([
-    'repeated-tool-call',
-    'oscillation',
-    'excessive-self-critique',
-    'stalled-retrieval',
-    'circular-reasoning',
+    "repeated-tool-call",
+    "oscillation",
+    "excessive-self-critique",
+    "stalled-retrieval",
+    "circular-reasoning",
   ]),
   description: z.string(),
   occurrences: z.number(),
@@ -321,14 +321,14 @@ export const BlackboxConfigSchema = z.object({
   ollama: z
     .object({
       host: z.string(),
-      defaultModel: z.string().default('llama3.2:3b'),
+      defaultModel: z.string().default("llama3.2:3b"),
     })
     .optional(),
 
   // Rules file settings
   rules: z
     .object({
-      file: z.string().default('CLAUDE.md'),
+      file: z.string().default("CLAUDE.md"),
       autoImprove: z.boolean().default(false),
     })
     .optional(),

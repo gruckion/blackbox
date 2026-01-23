@@ -3,16 +3,16 @@
  * Measures how efficiently tools are used
  */
 
-import type { EvaluationScore } from '@blackbox/shared';
-import type { Evaluator, EvaluatorContext } from '../types.js';
+import type { EvaluationScore } from "@blackbox/shared";
+import type { Evaluator, EvaluatorContext } from "../types.js";
 
 /**
  * Tool Efficiency Evaluator
  */
 export const toolEfficiency: Evaluator = {
   config: {
-    name: 'tool-efficiency',
-    description: 'Evaluates efficiency of tool usage',
+    name: "tool-efficiency",
+    description: "Evaluates efficiency of tool usage",
     requiresLLM: false,
   },
 
@@ -43,11 +43,11 @@ export const toolEfficiency: Evaluator = {
     if (totalToolCalls > 0) {
       const successRate = 1 - failedToolCalls / totalToolCalls;
       scores.push({
-        name: 'tool_success_rate',
+        name: "tool_success_rate",
         value: successRate,
         explanation:
           failedToolCalls === 0
-            ? 'All tool calls succeeded'
+            ? "All tool calls succeeded"
             : `${failedToolCalls} of ${totalToolCalls} tool calls failed`,
         metadata: {
           totalToolCalls,
@@ -62,7 +62,7 @@ export const toolEfficiency: Evaluator = {
       // Higher is better - using diverse tools appropriately
       const diversityScore = Math.min(uniqueTools.size / Math.max(totalToolCalls / 3, 1), 1);
       scores.push({
-        name: 'tool_diversity',
+        name: "tool_diversity",
         value: diversityScore,
         explanation: `Used ${uniqueTools.size} unique tools across ${totalToolCalls} calls`,
         metadata: {
@@ -82,7 +82,7 @@ export const toolEfficiency: Evaluator = {
       const efficiencyScore = Math.max(0, Math.min(1, 1 - (tokensPerCall - 300) / 700));
 
       scores.push({
-        name: 'token_efficiency',
+        name: "token_efficiency",
         value: efficiencyScore,
         explanation: `${Math.round(tokensPerCall)} tokens per call on average`,
         metadata: {
@@ -99,7 +99,7 @@ export const toolEfficiency: Evaluator = {
       // Assume 5-10 calls is typical, < 5 is efficient, > 20 is inefficient
       const callEfficiency = Math.max(0, Math.min(1, 1 - (callCount - 5) / 15));
       scores.push({
-        name: 'call_efficiency',
+        name: "call_efficiency",
         value: callEfficiency,
         explanation: `Completed in ${callCount} LLM calls`,
         metadata: {
@@ -112,7 +112,7 @@ export const toolEfficiency: Evaluator = {
     if (scores.length > 0) {
       const avgScore = scores.reduce((sum, s) => sum + s.value, 0) / scores.length;
       scores.unshift({
-        name: 'overall_efficiency',
+        name: "overall_efficiency",
         value: avgScore,
         explanation: `Overall efficiency score based on ${scores.length} metrics`,
       });

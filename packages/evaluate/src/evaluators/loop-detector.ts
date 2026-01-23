@@ -3,9 +3,9 @@
  * Detects stuck loops, oscillations, and repetitive behavior in traces
  */
 
-import type { EvaluationScore } from '@blackbox/shared';
-import { textSimilarity } from '@blackbox/shared';
-import type { Evaluator, EvaluatorContext, LoopPattern } from '../types.js';
+import type { EvaluationScore } from "@blackbox/shared";
+import { textSimilarity } from "@blackbox/shared";
+import type { Evaluator, EvaluatorContext, LoopPattern } from "../types.js";
 
 interface ToolCallRecord {
   callId: string;
@@ -63,7 +63,7 @@ function findRepeatedCalls(toolName: string, calls: ToolCallRecord[]): LoopPatte
   }
 
   return {
-    type: 'repeated-tool-call',
+    type: "repeated-tool-call",
     description: `Tool "${toolName}" called ${repeatCount + 1} times with similar arguments`,
     callIds: repeatedCallIds,
     count: repeatCount + 1,
@@ -92,7 +92,7 @@ function detectRepeatedToolCalls(context: EvaluatorContext): LoopPattern[] {
  */
 function extractContents(context: EvaluatorContext): string[] {
   return context.trace.calls.map((c) =>
-    typeof c.response.content === 'string' ? c.response.content : ''
+    typeof c.response.content === "string" ? c.response.content : ""
   );
 }
 
@@ -126,7 +126,7 @@ function detectOscillation(context: EvaluatorContext): LoopPattern[] {
       if (areWindowsSimilar(pattern1, pattern2)) {
         const callIds = trace.calls.slice(i, i + windowSize * 2).map((c) => c.id);
         patterns.push({
-          type: 'oscillation',
+          type: "oscillation",
           description: `Oscillation detected: ${windowSize}-step pattern repeating`,
           callIds,
           count: 2,
@@ -166,7 +166,7 @@ function detectStalled(context: EvaluatorContext): LoopPattern[] {
     } else {
       if (stalledRun >= 3) {
         patterns.push({
-          type: 'stalled',
+          type: "stalled",
           description: `Progress stalled: ${stalledRun + 1} consecutive similar responses`,
           callIds: [...stalledCallIds],
           count: stalledRun + 1,
@@ -179,7 +179,7 @@ function detectStalled(context: EvaluatorContext): LoopPattern[] {
 
   if (stalledRun >= 3) {
     patterns.push({
-      type: 'stalled',
+      type: "stalled",
       description: `Progress stalled: ${stalledRun + 1} consecutive similar responses`,
       callIds: stalledCallIds,
       count: stalledRun + 1,
@@ -194,13 +194,13 @@ function detectStalled(context: EvaluatorContext): LoopPattern[] {
  */
 function getPatternSeverity(pattern: LoopPattern): number {
   switch (pattern.type) {
-    case 'repeated-tool-call':
+    case "repeated-tool-call":
       return 0.3 * Math.min(pattern.count / 5, 1);
-    case 'oscillation':
+    case "oscillation":
       return 0.4;
-    case 'stalled':
+    case "stalled":
       return 0.2 * Math.min(pattern.count / 10, 1);
-    case 'circular':
+    case "circular":
       return 0.5;
     default:
       return 0;
@@ -211,27 +211,27 @@ function getPatternSeverity(pattern: LoopPattern): number {
  * Add pattern-specific scores to the results
  */
 function addPatternScores(scores: EvaluationScore[], patterns: LoopPattern[]): void {
-  if (patterns.some((p) => p.type === 'repeated-tool-call')) {
+  if (patterns.some((p) => p.type === "repeated-tool-call")) {
     scores.push({
-      name: 'no_repeated_tools',
+      name: "no_repeated_tools",
       value: 0,
-      explanation: 'Repeated tool calls detected',
+      explanation: "Repeated tool calls detected",
     });
   }
 
-  if (patterns.some((p) => p.type === 'oscillation')) {
+  if (patterns.some((p) => p.type === "oscillation")) {
     scores.push({
-      name: 'no_oscillation',
+      name: "no_oscillation",
       value: 0,
-      explanation: 'Oscillation pattern detected',
+      explanation: "Oscillation pattern detected",
     });
   }
 
-  if (patterns.some((p) => p.type === 'stalled')) {
+  if (patterns.some((p) => p.type === "stalled")) {
     scores.push({
-      name: 'making_progress',
+      name: "making_progress",
       value: 0,
-      explanation: 'Progress appears stalled',
+      explanation: "Progress appears stalled",
     });
   }
 }
@@ -241,8 +241,8 @@ function addPatternScores(scores: EvaluationScore[], patterns: LoopPattern[]): v
  */
 export const loopDetector: Evaluator = {
   config: {
-    name: 'loop-detector',
-    description: 'Detects stuck loops, oscillations, and repetitive behavior',
+    name: "loop-detector",
+    description: "Detects stuck loops, oscillations, and repetitive behavior",
     requiresLLM: false,
   },
 
@@ -260,12 +260,12 @@ export const loopDetector: Evaluator = {
 
     const scores: EvaluationScore[] = [
       {
-        name: 'loop_free',
+        name: "loop_free",
         value: 1 - severity,
         explanation:
           allPatterns.length === 0
-            ? 'No loop patterns detected'
-            : `Detected ${allPatterns.length} loop pattern(s): ${allPatterns.map((p) => p.type).join(', ')}`,
+            ? "No loop patterns detected"
+            : `Detected ${allPatterns.length} loop pattern(s): ${allPatterns.map((p) => p.type).join(", ")}`,
         metadata: {
           patterns: allPatterns,
           patternCount: allPatterns.length,

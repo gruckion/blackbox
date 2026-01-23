@@ -3,11 +3,11 @@
  * Generates improved rules using LLM
  */
 
-import { createLogger, now, type Rule, type RuleImprovement } from '@blackbox/shared';
-import OpenAI from 'openai';
-import type { ImprovementAnalysis, ImprovementOpportunity, RulesFile } from './types.js';
+import { createLogger, now, type Rule, type RuleImprovement } from "@blackbox/shared";
+import OpenAI from "openai";
+import type { ImprovementAnalysis, ImprovementOpportunity, RulesFile } from "./types.js";
 
-const logger = createLogger('generator');
+const logger = createLogger("generator");
 
 export interface GeneratorConfig {
   openai?: OpenAI | { apiKey: string; baseUrl?: string };
@@ -34,7 +34,7 @@ export class RuleGenerator {
       this.openai = new OpenAI();
     }
 
-    this.model = config.model || 'gpt-4o-mini';
+    this.model = config.model || "gpt-4o-mini";
     this.temperature = config.temperature ?? 0.7;
     this.maxImprovements = config.maxImprovements ?? 5;
   }
@@ -93,13 +93,13 @@ ${context}
 
 Opportunity Type: ${opportunity.type}
 Description: ${opportunity.description}
-Related Patterns: ${opportunity.relatedPatterns.join(', ') || 'None'}
+Related Patterns: ${opportunity.relatedPatterns.join(", ") || "None"}
 
 Current relevant rules:
 ${currentRules.rules
   .slice(0, 5)
   .map((r) => `- ${r.content}`)
-  .join('\n')}
+  .join("\n")}
 
 Generate a single clear, actionable rule that addresses this opportunity.`;
 
@@ -108,8 +108,8 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
         model: this.model,
         temperature: this.temperature,
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         max_tokens: 200,
       });
@@ -122,7 +122,7 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
 
       // Find the original rule if this is a modification
       let originalRule: Rule | undefined;
-      if (opportunity.type === 'modify_rule') {
+      if (opportunity.type === "modify_rule") {
         originalRule = currentRules.rules.find((r) =>
           opportunity.description.includes(r.content.slice(0, 30))
         );
@@ -134,8 +134,8 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
         improvedRule: {
           id: `rule-new-${Date.now()}`,
           content: generatedContent,
-          category: originalRule?.category || 'general',
-          source: 'generated',
+          category: originalRule?.category || "general",
+          source: "generated",
         },
         reason: opportunity.description,
         evidence: {
@@ -168,20 +168,20 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
     lines.push(`Total traces analyzed: ${analysis.traceCount}`);
 
     if (analysis.failurePatterns.length > 0) {
-      lines.push('\nFailure patterns found:');
+      lines.push("\nFailure patterns found:");
       for (const pattern of analysis.failurePatterns.slice(0, 3)) {
         lines.push(`- ${pattern.type}: ${pattern.description}`);
       }
     }
 
     if (analysis.loopPatterns.length > 0) {
-      lines.push('\nLoop patterns found:');
+      lines.push("\nLoop patterns found:");
       for (const pattern of analysis.loopPatterns.slice(0, 3)) {
         lines.push(`- ${pattern.type}: ${pattern.description}`);
       }
     }
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
@@ -191,20 +191,20 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
     const lines: string[] = [];
 
     lines.push(`Improvement: ${improvement.id}`);
-    lines.push('-'.repeat(40));
+    lines.push("-".repeat(40));
 
     if (improvement.originalRule) {
       lines.push(`Original: ${improvement.originalRule.content}`);
-      lines.push('');
+      lines.push("");
     }
 
     lines.push(`Improved: ${improvement.improvedRule.content}`);
-    lines.push('');
+    lines.push("");
     lines.push(`Reason: ${improvement.reason}`);
     lines.push(`Confidence: ${(improvement.confidence * 100).toFixed(0)}%`);
     lines.push(`Expected improvement: ${improvement.evidence.tracesImproved} traces`);
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 }
 
@@ -213,7 +213,7 @@ Generate a single clear, actionable rule that addresses this opportunity.`;
  */
 export function createRuleGenerator(config?: GeneratorConfig): RuleGenerator {
   return new RuleGenerator({
-    model: config?.model || process.env.BLACKBOX_IMPROVE_MODEL || 'gpt-4o-mini',
+    model: config?.model || process.env.BLACKBOX_IMPROVE_MODEL || "gpt-4o-mini",
     ...config,
   });
 }

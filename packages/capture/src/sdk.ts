@@ -12,10 +12,10 @@ import {
   type ToolCall,
   type Trace,
   type Usage,
-} from '@blackbox/shared';
-import OpenAI from 'openai';
-import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
-import { createLangfuseClientFromEnv, LangfuseClient } from './langfuse-client.js';
+} from "@blackbox/shared";
+import OpenAI from "openai";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
+import { createLangfuseClientFromEnv, LangfuseClient } from "./langfuse-client.js";
 import type {
   CaptureCallback,
   CaptureClient,
@@ -23,9 +23,9 @@ import type {
   CapturedCall,
   CaptureSession,
   CaptureStats,
-} from './types.js';
+} from "./types.js";
 
-const logger = createLogger('capture-sdk');
+const logger = createLogger("capture-sdk");
 
 /**
  * Create a capture-enabled OpenAI client
@@ -60,22 +60,22 @@ export function createCaptureClient(
 
   // Helper to convert OpenAI messages to our format
   function convertMessages(
-    messages: ChatCompletionCreateParamsNonStreaming['messages']
+    messages: ChatCompletionCreateParamsNonStreaming["messages"]
   ): Message[] {
     return messages.map((msg) => {
       const base: Message = {
-        role: msg.role as Message['role'],
-        content: typeof msg.content === 'string' ? msg.content : null,
+        role: msg.role as Message["role"],
+        content: typeof msg.content === "string" ? msg.content : null,
       };
 
-      if ('name' in msg && msg.name) {
+      if ("name" in msg && msg.name) {
         base.name = msg.name;
       }
 
-      if ('tool_calls' in msg && msg.tool_calls) {
+      if ("tool_calls" in msg && msg.tool_calls) {
         base.tool_calls = msg.tool_calls.map((tc) => ({
           id: tc.id,
-          type: 'function' as const,
+          type: "function" as const,
           function: {
             name: tc.function.name,
             arguments: tc.function.arguments,
@@ -83,7 +83,7 @@ export function createCaptureClient(
         }));
       }
 
-      if ('tool_call_id' in msg && msg.tool_call_id) {
+      if ("tool_call_id" in msg && msg.tool_call_id) {
         base.tool_call_id = msg.tool_call_id;
       }
 
@@ -112,7 +112,7 @@ export function createCaptureClient(
     }
     return choice.message.tool_calls.map((tc) => ({
       id: tc.id,
-      type: 'function' as const,
+      type: "function" as const,
       function: {
         name: tc.function.name,
         arguments: tc.function.arguments,
@@ -220,7 +220,7 @@ export function createCaptureClient(
 
       // Convert tools to our format
       const tools = params.tools?.map((t) => ({
-        type: 'function' as const,
+        type: "function" as const,
         function: {
           name: t.function.name,
           description: t.function.description,
@@ -233,7 +233,7 @@ export function createCaptureClient(
         id: callId,
         timestamp: startTime,
         model: params.model,
-        provider: 'openai',
+        provider: "openai",
         parameters: {
           temperature: params.temperature ?? undefined,
           top_p: params.top_p ?? undefined,
@@ -346,7 +346,7 @@ export function createCaptureClient(
 
   // Auto-flush on exit
   if (captureOptions.autoFlush !== false) {
-    process.on('beforeExit', async () => {
+    process.on("beforeExit", async () => {
       if (flushTimer) {
         clearTimeout(flushTimer);
       }
@@ -370,7 +370,7 @@ export function createCaptureClientFromEnv(
   const litellmHost = process.env.LITELLM_HOST;
   if (litellmHost) {
     openaiOptions.baseURL = `${litellmHost}/v1`;
-    openaiOptions.apiKey = process.env.LITELLM_MASTER_KEY || 'dummy';
+    openaiOptions.apiKey = process.env.LITELLM_MASTER_KEY || "dummy";
   }
 
   // Langfuse config from env

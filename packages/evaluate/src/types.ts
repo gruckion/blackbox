@@ -2,7 +2,7 @@
  * Types for the evaluation framework
  */
 
-import type { EvaluationResult, EvaluationScore, Trace } from '@blackbox/shared';
+import type { EvaluationResult, EvaluationScore, Trace } from "@blackbox/shared";
 
 export interface EvaluatorConfig {
   /**
@@ -140,7 +140,7 @@ export interface LoopPattern {
   /**
    * Type of loop pattern
    */
-  type: 'repeated-tool-call' | 'oscillation' | 'stalled' | 'circular';
+  type: "repeated-tool-call" | "oscillation" | "stalled" | "circular";
 
   /**
    * Description of the pattern

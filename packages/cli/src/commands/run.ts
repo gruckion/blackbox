@@ -2,22 +2,22 @@
  * Run command - Full pipeline: replay, evaluate, improve, and PR
  */
 
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { createDefaultPipeline, type PipelineResult } from '@blackbox/evaluate';
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { createDefaultPipeline, type PipelineResult } from "@blackbox/evaluate";
 import {
   analyzeTraces,
   createRuleGenerator,
   loadRulesFile,
   type RulesFile,
-} from '@blackbox/improve';
-import { createPRGenerator } from '@blackbox/pr-generator';
-import { createReplayEngine } from '@blackbox/replay';
-import type { RuleImprovement, Trace } from '@blackbox/shared';
-import chalk from 'chalk';
-import { Command } from 'commander';
-import type { Ora } from 'ora';
-import ora from 'ora';
+} from "@blackbox/improve";
+import { createPRGenerator } from "@blackbox/pr-generator";
+import { createReplayEngine } from "@blackbox/replay";
+import type { RuleImprovement, Trace } from "@blackbox/shared";
+import chalk from "chalk";
+import { Command } from "commander";
+import type { Ora } from "ora";
+import ora from "ora";
 
 interface PipelineOptions {
   input: string;
@@ -46,8 +46,8 @@ async function loadTraces(inputDir: string): Promise<Trace[]> {
   const traces: Trace[] = [];
 
   for (const file of traceFiles) {
-    if (file.endsWith('.json')) {
-      const content = await readFile(join(inputDir, file), 'utf-8');
+    if (file.endsWith(".json")) {
+      const content = await readFile(join(inputDir, file), "utf-8");
       traces.push(JSON.parse(content));
     }
   }
@@ -62,7 +62,7 @@ async function replayTraces(
   spinner: Ora
 ): Promise<Trace[]> {
   if (options.skipReplay) {
-    console.log(chalk.gray('  Skipping replay (--skip-replay)'));
+    console.log(chalk.gray("  Skipping replay (--skip-replay)"));
     return traces;
   }
 
@@ -71,7 +71,7 @@ async function replayTraces(
   const replayEngine = createReplayEngine({
     ollamaHost: options.ollama,
     defaultModel: options.model,
-    defaultMode: 'semi-live',
+    defaultMode: "semi-live",
   });
 
   const replayResults = await replayEngine.replayBatch(traces);
@@ -92,13 +92,13 @@ async function evaluateTraces(
   spinner: Ora
 ): Promise<PipelineResult[]> {
   if (options.skipEvaluate) {
-    console.log(chalk.gray('  Skipping evaluation (--skip-evaluate)'));
+    console.log(chalk.gray("  Skipping evaluation (--skip-evaluate)"));
     const evalFiles = await readdir(dirs.evalDir).catch(() => []);
     const evaluations: PipelineResult[] = [];
 
     for (const file of evalFiles) {
-      if (file.endsWith('.json')) {
-        const content = await readFile(join(dirs.evalDir, file), 'utf-8');
+      if (file.endsWith(".json")) {
+        const content = await readFile(join(dirs.evalDir, file), "utf-8");
         evaluations.push(JSON.parse(content));
       }
     }
@@ -135,12 +135,12 @@ async function createPullRequests(
 
   if (!(options.githubToken && options.githubOwner && options.githubRepo)) {
     console.log(
-      chalk.yellow('\n⚠ PR creation requires --github-token, --github-owner, and --github-repo')
+      chalk.yellow("\n⚠ PR creation requires --github-token, --github-owner, and --github-repo")
     );
     return;
   }
 
-  spinner.text = 'Creating PRs for improvements...';
+  spinner.text = "Creating PRs for improvements...";
 
   const prGenerator = createPRGenerator({
     token: options.githubToken,
@@ -156,7 +156,7 @@ async function createPullRequests(
   const successfulPRs = prResults.filter((r) => r.success);
   console.log(chalk.gray(`  Created ${successfulPRs.length} PRs`));
 
-  const prResultsFile = join(dirs.outputDir, 'pr-results.json');
+  const prResultsFile = join(dirs.outputDir, "pr-results.json");
   await writeFile(prResultsFile, JSON.stringify(prResults, null, 2));
 
   for (const pr of successfulPRs) {
@@ -171,42 +171,42 @@ function printSummary(
   options: PipelineOptions,
   dirs: PipelineDirs
 ): void {
-  console.log(chalk.green('\n📊 Pipeline Summary\n'));
+  console.log(chalk.green("\n📊 Pipeline Summary\n"));
   console.log(chalk.gray(`  Traces processed: ${traces.length}`));
   console.log(chalk.gray(`  Evaluations run: ${evaluations.length}`));
   console.log(chalk.gray(`  Improvements generated: ${improvements.length}`));
   console.log(chalk.gray(`  Output directory: ${dirs.outputDir}`));
 
   if (improvements.length > 0 && !options.createPr) {
-    console.log(chalk.yellow('\n💡 Run with --create-pr to create GitHub PRs for improvements'));
+    console.log(chalk.yellow("\n💡 Run with --create-pr to create GitHub PRs for improvements"));
   }
 }
 
-export const runCommand = new Command('run')
-  .description('Run the full Blackbox pipeline')
-  .option('-i, --input <path>', 'Input directory with traces', './traces')
-  .option('-o, --output <path>', 'Output directory for all results', './blackbox-output')
-  .option('-r, --rules <path>', 'Rules file to improve', './CLAUDE.md')
-  .option('-m, --model <name>', 'Local model for replay', 'llama3.2:3b')
-  .option('--ollama <url>', 'Ollama host', 'http://localhost:11434')
-  .option('--gen-model <name>', 'Model for improvement generation', 'gpt-4o-mini')
-  .option('--max-improvements <n>', 'Maximum improvements to generate', '5')
-  .option('--create-pr', 'Create GitHub PRs for improvements')
-  .option('--github-token <token>', 'GitHub token for PR creation')
-  .option('--github-owner <owner>', 'GitHub repository owner')
-  .option('--github-repo <repo>', 'GitHub repository name')
-  .option('--skip-replay', 'Skip replay step (use existing traces)')
-  .option('--skip-evaluate', 'Skip evaluation step (use existing evaluations)')
+export const runCommand = new Command("run")
+  .description("Run the full Blackbox pipeline")
+  .option("-i, --input <path>", "Input directory with traces", "./traces")
+  .option("-o, --output <path>", "Output directory for all results", "./blackbox-output")
+  .option("-r, --rules <path>", "Rules file to improve", "./CLAUDE.md")
+  .option("-m, --model <name>", "Local model for replay", "llama3.2:3b")
+  .option("--ollama <url>", "Ollama host", "http://localhost:11434")
+  .option("--gen-model <name>", "Model for improvement generation", "gpt-4o-mini")
+  .option("--max-improvements <n>", "Maximum improvements to generate", "5")
+  .option("--create-pr", "Create GitHub PRs for improvements")
+  .option("--github-token <token>", "GitHub token for PR creation")
+  .option("--github-owner <owner>", "GitHub repository owner")
+  .option("--github-repo <repo>", "GitHub repository name")
+  .option("--skip-replay", "Skip replay step (use existing traces)")
+  .option("--skip-evaluate", "Skip evaluation step (use existing evaluations)")
   .action(async (options: PipelineOptions) => {
-    const spinner = ora('Starting Blackbox pipeline...').start();
+    const spinner = ora("Starting Blackbox pipeline...").start();
 
     try {
-      console.log(chalk.blue('\n🚀 Blackbox Pipeline\n'));
+      console.log(chalk.blue("\n🚀 Blackbox Pipeline\n"));
 
       const dirs: PipelineDirs = {
         outputDir: options.output,
-        replayDir: join(options.output, 'replays'),
-        evalDir: join(options.output, 'evaluations'),
+        replayDir: join(options.output, "replays"),
+        evalDir: join(options.output, "evaluations"),
       };
 
       await mkdir(dirs.outputDir, { recursive: true });
@@ -214,13 +214,13 @@ export const runCommand = new Command('run')
       await mkdir(dirs.evalDir, { recursive: true });
 
       // Step 1: Load traces
-      spinner.text = 'Loading traces...';
+      spinner.text = "Loading traces...";
       const traces = await loadTraces(options.input);
 
       if (traces.length === 0) {
-        spinner.fail('No traces found');
+        spinner.fail("No traces found");
         console.log(chalk.yellow(`\nNo trace files found in ${options.input}`));
-        console.log(chalk.gray('Capture traces first using the @blackbox/capture SDK'));
+        console.log(chalk.gray("Capture traces first using the @blackbox/capture SDK"));
         return;
       }
 
@@ -233,13 +233,13 @@ export const runCommand = new Command('run')
       const evaluations = await evaluateTraces(replayedTraces, options, dirs, spinner);
 
       // Step 4: Analyze and Generate Improvements
-      spinner.text = 'Analyzing and generating improvements...';
+      spinner.text = "Analyzing and generating improvements...";
       const rules = await loadRulesFile(options.rules);
       const analysis = analyzeTraces(traces, evaluations, rules);
 
       if (analysis.opportunities.length === 0) {
-        spinner.succeed('Pipeline complete - no improvements needed');
-        console.log(chalk.green('\n✓ All traces passed quality checks'));
+        spinner.succeed("Pipeline complete - no improvements needed");
+        console.log(chalk.green("\n✓ All traces passed quality checks"));
         return;
       }
 
@@ -251,16 +251,16 @@ export const runCommand = new Command('run')
       const improvements = await generator.generate(analysis, rules);
       console.log(chalk.gray(`  Generated ${improvements.length} improvements`));
 
-      const improvementsFile = join(dirs.outputDir, 'improvements.json');
+      const improvementsFile = join(dirs.outputDir, "improvements.json");
       await writeFile(improvementsFile, JSON.stringify(improvements, null, 2));
 
       // Step 5: Create PRs
       await createPullRequests(improvements, rules, options, dirs, spinner);
 
-      spinner.succeed('Pipeline complete');
+      spinner.succeed("Pipeline complete");
       printSummary(traces, evaluations, improvements, options, dirs);
     } catch (error) {
-      spinner.fail('Pipeline failed');
+      spinner.fail("Pipeline failed");
       console.error(chalk.red(`Error: ${error}`));
       process.exit(1);
     }

@@ -1,0 +1,137 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #2a2a2a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.wrapper:hover:not(.disabled) {
+  border-color: #4a4a4a;
+}
+
+.wrapper:focus-within:not(.disabled) {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.wrapper.hasError {
+  border-color: #ef4444;
+}
+
+.wrapper.hasError:focus-within {
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.wrapper.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.input {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  outline: none;
+}
+
+.input::placeholder {
+  color: #666666;
+}
+
+.input:disabled {
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.sm .input {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.md .input {
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+.lg .input {
+  height: 44px;
+  padding: 0 14px;
+  font-size: 16px;
+}
+
+/* Icon padding adjustments */
+.hasLeftIcon .input {
+  padding-left: 36px;
+}
+
+.hasRightIcon .input {
+  padding-right: 36px;
+}
+
+.sm.hasLeftIcon .input {
+  padding-left: 30px;
+}
+
+.sm.hasRightIcon .input {
+  padding-right: 30px;
+}
+
+.lg.hasLeftIcon .input {
+  padding-left: 42px;
+}
+
+.lg.hasRightIcon .input {
+  padding-right: 42px;
+}
+
+/* Icons */
+.leftIcon,
+.rightIcon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666666;
+  pointer-events: none;
+}
+
+.leftIcon {
+  left: 10px;
+}
+
+.rightIcon {
+  right: 10px;
+}
+
+.leftIcon svg,
+.rightIcon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Error message */
+.error {
+  font-size: 12px;
+  color: #ef4444;
+}

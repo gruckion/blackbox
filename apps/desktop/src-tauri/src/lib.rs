@@ -1,11 +1,46 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use serde::{Deserialize, Serialize};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager, WebviewUrl, WebviewWindowBuilder,
 };
+
+/// Application settings structure for frontend-backend communication
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct AppSettings {
+    pub launch_at_login: bool,
+    pub hotkey: String,
+    pub show_in_menu_bar: bool,
+    pub appearance: String, // "light", "dark", "system"
+}
+
+impl Default for AppSettings {
+    fn default() -> Self {
+        Self {
+            launch_at_login: false,
+            hotkey: "CommandOrControl+Space".to_string(),
+            show_in_menu_bar: true,
+            appearance: "system".to_string(),
+        }
+    }
+}
+
+/// Returns the application version from Cargo.toml
+#[tauri::command]
+fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Opens an external URL in the default browser
+#[tauri::command]
+fn open_external_url(url: String, app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    app.opener()
+        .open_url(&url, None::<&str>)
+        .map_err(|e| e.to_string())
+}
 
 /// Window configuration constants
 pub mod config {
@@ -143,6 +178,8 @@ impl WindowAction {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![get_app_version, open_external_url])
         .setup(|app| {
             // Create menu items for the tray
             let quit_i = MenuItem::with_id(
@@ -154,66 +191,23 @@ pub fn run() {
             )?;
             let menu = Menu::with_items(app, &[&quit_i])?;
 
-            // Build the tray icon
+            // Build the tray icon (icon is set via tauri.conf.json trayIcon config)
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .show_menu_on_left_click(false)
+                .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
                     let action = MenuAction::from_id(event.id.as_ref());
                     if action.should_exit() {
                         app.exit(0);
                     }
                 })
-                .on_tray_icon_event(|tray, event| {
-                    if let tauri::tray::TrayIconEvent::Click {
-                        button: tauri::tray::MouseButton::Left,
-                        ..
-                    } = event
-                    {
-                        let app = tray.app_handle();
-
-                        // Determine action based on window state
-                        let window = app.get_webview_window(config::WINDOW_LABEL);
-                        let action = WindowAction::determine(
-                            window.is_some(),
-                            window.as_ref().and_then(|w| w.is_visible().ok()),
-                        );
-
-                        match action {
-                            WindowAction::Toggle(new_visibility) => {
-                                if let Some(window) = window {
-                                    if new_visibility.is_visible() {
-                                        let _ = window.show();
-                                        let _ = window.set_focus();
-                                    } else {
-                                        let _ = window.hide();
-                                    }
-                                }
-                            }
-                            WindowAction::Create => {
-                                let dims = WindowDimensions::default_dimensions();
-                                let window = WebviewWindowBuilder::new(
-                                    app,
-                                    config::WINDOW_LABEL,
-                                    WebviewUrl::default(),
-                                )
-                                .title(config::WINDOW_TITLE)
-                                .inner_size(dims.width, dims.height)
-                                .decorations(true)
-                                .resizable(false)
-                                .always_on_top(true)
-                                .visible(true)
-                                .build();
-
-                                if let Ok(win) = window {
-                                    let _ = win.set_focus();
-                                }
-                            }
-                        }
-                    }
-                })
                 .build(app)?;
+
+            // Hide from Dock - this is a menu bar only app
+            #[cfg(target_os = "macos")]
+            {
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
 
             Ok(())
         })

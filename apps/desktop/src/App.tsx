@@ -1,9 +1,12 @@
+import { Route, Routes } from "react-router-dom";
+import { MainView, SettingsView } from "./views";
+
 function App() {
   return (
-    <main className="container">
-      <h1>Hello World</h1>
-      <p>Welcome to Blackbox Desktop</p>
-    </main>
+    <Routes>
+      <Route element={<MainView />} path="/" />
+      <Route element={<SettingsView />} path="/settings" />
+    </Routes>
   );
 }
 

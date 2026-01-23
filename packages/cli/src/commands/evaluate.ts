@@ -2,40 +2,40 @@
  * Evaluate command - Evaluate traces for quality
  */
 
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { createDefaultPipeline } from '@blackbox/evaluate';
-import type { EvaluationResult, EvaluationScore, Trace } from '@blackbox/shared';
-import chalk from 'chalk';
-import { Command } from 'commander';
-import ora from 'ora';
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { createDefaultPipeline } from "@blackbox/evaluate";
+import type { EvaluationResult, EvaluationScore, Trace } from "@blackbox/shared";
+import chalk from "chalk";
+import { Command } from "commander";
+import ora from "ora";
 
-export const evaluateCommand = new Command('evaluate')
-  .description('Evaluate traces for quality and issues')
-  .option('-i, --input <path>', 'Input directory with traces', './traces')
-  .option('-o, --output <path>', 'Output directory for evaluation results', './eval-results')
-  .option('--phoenix <url>', 'Phoenix endpoint', 'http://localhost:6006')
-  .option('--llm-judge', 'Enable LLM judge evaluation')
-  .option('--loop-detection', 'Enable loop detection', true)
+export const evaluateCommand = new Command("evaluate")
+  .description("Evaluate traces for quality and issues")
+  .option("-i, --input <path>", "Input directory with traces", "./traces")
+  .option("-o, --output <path>", "Output directory for evaluation results", "./eval-results")
+  .option("--phoenix <url>", "Phoenix endpoint", "http://localhost:6006")
+  .option("--llm-judge", "Enable LLM judge evaluation")
+  .option("--loop-detection", "Enable loop detection", true)
   .action(async (options) => {
-    const spinner = ora('Loading traces...').start();
+    const spinner = ora("Loading traces...").start();
 
     try {
-      console.log(chalk.blue('\n📊 Blackbox Evaluate\n'));
+      console.log(chalk.blue("\n📊 Blackbox Evaluate\n"));
 
       // Load traces
       const traceFiles = await readdir(options.input).catch(() => []);
       const traces: Trace[] = [];
 
       for (const file of traceFiles) {
-        if (file.endsWith('.json')) {
-          const content = await readFile(join(options.input, file), 'utf-8');
+        if (file.endsWith(".json")) {
+          const content = await readFile(join(options.input, file), "utf-8");
           traces.push(JSON.parse(content));
         }
       }
 
       if (traces.length === 0) {
-        spinner.warn('No traces found');
+        spinner.warn("No traces found");
         console.log(chalk.yellow(`\nNo trace files found in ${options.input}`));
         return;
       }
@@ -71,7 +71,7 @@ export const evaluateCommand = new Command('evaluate')
       console.log(chalk.green(`\n✓ Results saved to ${options.output}`));
 
       // Show summary
-      console.log(chalk.gray('\nSummary:'));
+      console.log(chalk.gray("\nSummary:"));
 
       // Calculate averages
       let totalOverall = 0;
@@ -81,10 +81,10 @@ export const evaluateCommand = new Command('evaluate')
         totalOverall += result.aggregateScores.overall || 0;
 
         const loopResult = result.results.find(
-          (r: EvaluationResult) => r.evaluatorName === 'loop-detector'
+          (r: EvaluationResult) => r.evaluatorName === "loop-detector"
         );
         if (loopResult) {
-          const loopScore = loopResult.scores.find((s: EvaluationScore) => s.name === 'loop-score');
+          const loopScore = loopResult.scores.find((s: EvaluationScore) => s.name === "loop-score");
           if (loopScore && loopScore.value < 1) {
             loopCount++;
           }
@@ -97,7 +97,7 @@ export const evaluateCommand = new Command('evaluate')
         console.log(chalk.yellow(`  Traces with loops: ${loopCount}`));
       }
     } catch (error) {
-      spinner.fail('Evaluation failed');
+      spinner.fail("Evaluation failed");
       console.error(chalk.red(`Error: ${error}`));
       process.exit(1);
     }

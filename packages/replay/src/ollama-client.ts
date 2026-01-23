@@ -2,15 +2,15 @@
  * Ollama client for local model replay
  */
 
-import { createLogger } from '@blackbox/shared';
+import { createLogger } from "@blackbox/shared";
 import type {
   OllamaChatRequest,
   OllamaChatResponse,
   OllamaListResponse,
   OllamaModelInfo,
-} from './types.js';
+} from "./types.js";
 
-const logger = createLogger('ollama-client');
+const logger = createLogger("ollama-client");
 
 export interface OllamaClientOptions {
   host?: string;
@@ -22,7 +22,7 @@ export class OllamaClient {
   private readonly debug: boolean;
 
   constructor(options: OllamaClientOptions = {}) {
-    this.host = options.host || process.env.OLLAMA_HOST || 'http://localhost:11434';
+    this.host = options.host || process.env.OLLAMA_HOST || "http://localhost:11434";
     this.debug = options.debug ?? false;
 
     if (this.debug) {
@@ -36,7 +36,7 @@ export class OllamaClient {
   async isAvailable(): Promise<boolean> {
     try {
       const response = await fetch(`${this.host}/api/tags`, {
-        method: 'GET',
+        method: "GET",
         signal: AbortSignal.timeout(5000),
       });
       return response.ok;
@@ -81,8 +81,8 @@ export class OllamaClient {
     logger.info(`Pulling model ${modelName}...`);
 
     const response = await fetch(`${this.host}/api/pull`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: modelName }),
     });
 
@@ -115,8 +115,8 @@ export class OllamaClient {
     }
 
     const response = await fetch(`${this.host}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...request,
         stream: false,
@@ -154,8 +154,8 @@ export class OllamaClient {
     usage: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
   }> {
     const response = await fetch(`${this.host}/v1/chat/completions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model,
         messages,
@@ -178,7 +178,7 @@ export class OllamaClient {
     const data = (await response.json()) as OpenAIResponse;
 
     return {
-      content: data.choices?.[0]?.message?.content || '',
+      content: data.choices?.[0]?.message?.content || "",
       usage: data.usage,
     };
   }
@@ -197,6 +197,6 @@ export class OllamaClient {
 export function createOllamaClient(options?: OllamaClientOptions): OllamaClient {
   return new OllamaClient({
     host: options?.host || process.env.OLLAMA_HOST,
-    debug: options?.debug ?? process.env.BLACKBOX_LOG_LEVEL === 'debug',
+    debug: options?.debug ?? process.env.BLACKBOX_LOG_LEVEL === "debug",
   });
 }

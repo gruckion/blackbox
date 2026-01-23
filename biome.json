@@ -6,7 +6,7 @@
   },
   "javascript": {
     "formatter": {
-      "quoteStyle": "single"
+      "quoteStyle": "double"
     }
   },
   "linter": {
@@ -18,7 +18,11 @@
   },
   "overrides": [
     {
-      "includes": ["packages/*/src/index.ts", "packages/*/src/*/index.ts"],
+      "includes": [
+        "packages/*/src/index.ts",
+        "packages/*/src/*/index.ts",
+        "apps/*/src/views/index.ts"
+      ],
       "linter": {
         "rules": {
           "performance": {

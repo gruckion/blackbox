@@ -13,11 +13,11 @@ import {
   type ReplayMode,
   type Trace,
   textSimilarity,
-} from '@blackbox/shared';
-import { createOllamaClient, type OllamaClient } from './ollama-client.js';
-import type { CallComparison, ReplayEngineOptions, ReplayOutput, ReplayRequest } from './types.js';
+} from "@blackbox/shared";
+import { createOllamaClient, type OllamaClient } from "./ollama-client.js";
+import type { CallComparison, ReplayEngineOptions, ReplayOutput, ReplayRequest } from "./types.js";
 
-const logger = createLogger('replay-engine');
+const logger = createLogger("replay-engine");
 
 export class ReplayEngine {
   private readonly ollama: OllamaClient;
@@ -31,8 +31,8 @@ export class ReplayEngine {
       host: options.ollamaHost,
       debug: options.debug,
     });
-    this.defaultModel = options.defaultModel || process.env.OLLAMA_DEFAULT_MODEL || 'llama3.2:3b';
-    this.defaultMode = options.defaultMode || 'exact';
+    this.defaultModel = options.defaultModel || process.env.OLLAMA_DEFAULT_MODEL || "llama3.2:3b";
+    this.defaultMode = options.defaultMode || "exact";
     this.debug = options.debug ?? false;
     this.timeoutMs = options.timeoutMs || 120_000; // 2 minutes default
 
@@ -49,7 +49,7 @@ export class ReplayEngine {
   async isReady(): Promise<boolean> {
     const available = await this.ollama.isAvailable();
     if (!available) {
-      logger.warn('Ollama is not available');
+      logger.warn("Ollama is not available");
       return false;
     }
 
@@ -152,7 +152,7 @@ export class ReplayEngine {
         temperature: originalCall.parameters?.temperature,
         max_tokens: originalCall.parameters?.max_tokens,
         stop:
-          typeof originalCall.parameters?.stop === 'string'
+          typeof originalCall.parameters?.stop === "string"
             ? [originalCall.parameters.stop]
             : originalCall.parameters?.stop,
       });
@@ -163,13 +163,13 @@ export class ReplayEngine {
         id: callId,
         timestamp: startTime,
         model,
-        provider: 'ollama',
+        provider: "ollama",
         parameters: originalCall.parameters,
         messages: originalCall.messages,
         tools: originalCall.tools,
         response: {
           content: response.content,
-          finishReason: 'stop',
+          finishReason: "stop",
         },
         usage: {
           promptTokens: response.usage.prompt_tokens,
@@ -188,13 +188,13 @@ export class ReplayEngine {
         id: callId,
         timestamp: startTime,
         model,
-        provider: 'ollama',
+        provider: "ollama",
         parameters: originalCall.parameters,
         messages: originalCall.messages,
         tools: originalCall.tools,
         response: {
           content: null,
-          finishReason: 'error',
+          finishReason: "error",
         },
         latency,
         error: errorMsg,
@@ -213,7 +213,7 @@ export class ReplayEngine {
     return messages
       .map((msg) => {
         // For exact mode, replace tool outputs with captured values
-        if (mode === 'exact' && msg.role === 'tool' && msg.tool_call_id && toolOutputs) {
+        if (mode === "exact" && msg.role === "tool" && msg.tool_call_id && toolOutputs) {
           const output = toolOutputs.get(msg.tool_call_id);
           if (output) {
             return {
@@ -226,15 +226,15 @@ export class ReplayEngine {
         // Convert content to string
         let content: string;
         if (msg.content === null) {
-          content = '';
-        } else if (typeof msg.content === 'string') {
+          content = "";
+        } else if (typeof msg.content === "string") {
           content = msg.content;
         } else {
           // Handle array content (text + images)
           content = msg.content
-            .filter((part) => part.type === 'text')
-            .map((part) => ('text' in part ? part.text : ''))
-            .join('\n');
+            .filter((part) => part.type === "text")
+            .map((part) => ("text" in part ? part.text : ""))
+            .join("\n");
         }
 
         return {
@@ -250,17 +250,17 @@ export class ReplayEngine {
    */
   private compareCall(original: LLMCall, replayed: LLMCall): CallComparison {
     const originalContent =
-      typeof original.response.content === 'string' ? original.response.content : null;
+      typeof original.response.content === "string" ? original.response.content : null;
     const replayContent =
-      typeof replayed.response.content === 'string' ? replayed.response.content : null;
+      typeof replayed.response.content === "string" ? replayed.response.content : null;
 
     // Calculate similarity
     const similarity =
       originalContent && replayContent ? textSimilarity(originalContent, replayContent) : 0;
 
     // Calculate token difference
-    const originalTokens = original.usage?.totalTokens || estimateTokens(originalContent || '');
-    const replayTokens = replayed.usage?.totalTokens || estimateTokens(replayContent || '');
+    const originalTokens = original.usage?.totalTokens || estimateTokens(originalContent || "");
+    const replayTokens = replayed.usage?.totalTokens || estimateTokens(replayContent || "");
     const tokenDiff = replayTokens - originalTokens;
 
     // Calculate latency difference
@@ -336,7 +336,7 @@ export function createReplayEngine(options?: ReplayEngineOptions): ReplayEngine 
   return new ReplayEngine({
     ollamaHost: options?.ollamaHost || process.env.OLLAMA_HOST,
     defaultModel: options?.defaultModel || process.env.OLLAMA_DEFAULT_MODEL,
-    debug: options?.debug ?? process.env.BLACKBOX_LOG_LEVEL === 'debug',
+    debug: options?.debug ?? process.env.BLACKBOX_LOG_LEVEL === "debug",
     ...options,
   });
 }

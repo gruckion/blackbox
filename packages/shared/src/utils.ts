@@ -2,7 +2,7 @@
  * Utility functions for Blackbox
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 // =============================================================================
 // ID Generation
@@ -12,21 +12,21 @@ import { randomUUID } from 'node:crypto';
  * Generate a unique trace ID
  */
 export function generateTraceId(): string {
-  return `trace_${randomUUID().replace(/-/g, '')}`;
+  return `trace_${randomUUID().replace(/-/g, "")}`;
 }
 
 /**
  * Generate a unique session ID
  */
 export function generateSessionId(): string {
-  return `session_${randomUUID().replace(/-/g, '')}`;
+  return `session_${randomUUID().replace(/-/g, "")}`;
 }
 
 /**
  * Generate a unique call ID
  */
 export function generateCallId(): string {
-  return `call_${randomUUID().replace(/-/g, '')}`;
+  return `call_${randomUUID().replace(/-/g, "")}`;
 }
 
 // =============================================================================
@@ -81,7 +81,7 @@ export function estimateMessageTokens(
   messages: Array<{ role: string; content: string | null }>
 ): number {
   return messages.reduce((sum, msg) => {
-    const content = msg.content || '';
+    const content = msg.content || "";
     // Add overhead for role tokens
     return sum + estimateTokens(content) + 4;
   }, 0);
@@ -154,7 +154,7 @@ export function truncate(str: string, maxLength: number): string {
 /**
  * Get environment variable with fallback
  */
-export function getEnv(key: string, fallback = ''): string {
+export function getEnv(key: string, fallback = ""): string {
   return process.env[key] || fallback;
 }
 

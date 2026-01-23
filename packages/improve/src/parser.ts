@@ -3,13 +3,13 @@
  * Parses common rules file formats (CLAUDE.md, AGENTS.md)
  */
 
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
-import type { Rule } from '@blackbox/shared';
-import { createLogger } from '@blackbox/shared';
-import type { RulesFile } from './types.js';
+import { existsSync } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
+import type { Rule } from "@blackbox/shared";
+import { createLogger } from "@blackbox/shared";
+import type { RulesFile } from "./types.js";
 
-const logger = createLogger('rules-parser');
+const logger = createLogger("rules-parser");
 
 // Top-level regex patterns for markdown parsing
 const H2_HEADING_REGEX = /^##\s+(.+)$/;
@@ -21,7 +21,7 @@ const LINE_NUMBER_REGEX = /:(\d+)$/;
 const WHITESPACE_REPLACE_REGEX = /\s+/g;
 
 interface RuleModification {
-  type: 'add' | 'modify' | 'remove';
+  type: "add" | "modify" | "remove";
   rule: Rule;
   newContent?: string;
 }
@@ -59,7 +59,7 @@ function handleH2Heading(line: string, state: ParseState): boolean {
     return false;
   }
 
-  state.currentCategory = match[1].toLowerCase().replace(WHITESPACE_REPLACE_REGEX, '-');
+  state.currentCategory = match[1].toLowerCase().replace(WHITESPACE_REPLACE_REGEX, "-");
   return true;
 }
 
@@ -80,7 +80,7 @@ function handleH3Heading(
   if (state.currentRule) {
     state.rules.push(state.currentRule as Rule);
   }
-  state.currentRule = createRule('', state.currentCategory, path, lineNumber, state.rules.length);
+  state.currentRule = createRule("", state.currentCategory, path, lineNumber, state.rules.length);
   return true;
 }
 
@@ -134,8 +134,8 @@ function handleNumberedList(
  * Handle regular content line
  */
 function handleContentLine(line: string, state: ParseState): void {
-  if (state.currentRule && line.trim() && !line.startsWith('#')) {
-    state.currentRule.content = `${(state.currentRule.content || '') + line.trim()} `;
+  if (state.currentRule && line.trim() && !line.startsWith("#")) {
+    state.currentRule.content = `${(state.currentRule.content || "") + line.trim()} `;
   }
 }
 
@@ -143,11 +143,11 @@ function handleContentLine(line: string, state: ParseState): void {
  * Parse a markdown rules file
  */
 function parseMarkdownRules(content: string, path: string): Rule[] {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const state: ParseState = {
     rules: [],
     currentRule: null,
-    currentCategory: 'general',
+    currentCategory: "general",
   };
 
   let lineNumber = 0;
@@ -182,8 +182,8 @@ function parseMarkdownRules(content: string, path: string): Rule[] {
  * Add a new rule to content
  */
 function applyAddModification(content: string, mod: RuleModification): string {
-  const category = mod.rule.category || 'general';
-  const categoryPattern = new RegExp(`^##\\s+${category}`, 'im');
+  const category = mod.rule.category || "general";
+  const categoryPattern = new RegExp(`^##\\s+${category}`, "im");
   const categoryMatch = content.match(categoryPattern);
 
   if (categoryMatch && categoryMatch.index !== undefined) {
@@ -212,11 +212,11 @@ function applyModifyModification(content: string, mod: RuleModification): string
   }
 
   const lineNum = Number.parseInt(sourceMatch[1], 10);
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   if (lineNum > 0 && lineNum <= lines.length) {
     lines[lineNum - 1] = `- ${mod.newContent}`;
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   return content;
@@ -236,11 +236,11 @@ function applyRemoveModification(content: string, mod: RuleModification): string
   }
 
   const lineNum = Number.parseInt(sourceMatch[1], 10);
-  const lines = content.split('\n');
+  const lines = content.split("\n");
 
   if (lineNum > 0 && lineNum <= lines.length) {
     lines.splice(lineNum - 1, 1);
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   return content;
@@ -251,11 +251,11 @@ function applyRemoveModification(content: string, mod: RuleModification): string
  */
 function applyModification(content: string, mod: RuleModification): string {
   switch (mod.type) {
-    case 'add':
+    case "add":
       return applyAddModification(content, mod);
-    case 'modify':
+    case "modify":
       return applyModifyModification(content, mod);
-    case 'remove':
+    case "remove":
       return applyRemoveModification(content, mod);
     default:
       return content;
@@ -265,14 +265,14 @@ function applyModification(content: string, mod: RuleModification): string {
 /**
  * Detect file format from path
  */
-function detectFormat(path: string): RulesFile['format'] {
-  if (path.endsWith('.yaml') || path.endsWith('.yml')) {
-    return 'yaml';
+function detectFormat(path: string): RulesFile["format"] {
+  if (path.endsWith(".yaml") || path.endsWith(".yml")) {
+    return "yaml";
   }
-  if (path.endsWith('.json')) {
-    return 'json';
+  if (path.endsWith(".json")) {
+    return "json";
   }
-  return 'markdown';
+  return "markdown";
 }
 
 /**
@@ -296,19 +296,19 @@ export async function loadRulesFile(path: string): Promise<RulesFile> {
     logger.info(`Rules file not found at ${path}, creating empty rules`);
     return {
       path,
-      content: '',
+      content: "",
       rules: [],
-      format: 'markdown',
+      format: "markdown",
     };
   }
 
-  const content = await readFile(path, 'utf-8');
+  const content = await readFile(path, "utf-8");
   const format = detectFormat(path);
 
   let rules: Rule[] = [];
-  if (format === 'markdown') {
+  if (format === "markdown") {
     rules = parseMarkdownRules(content, path);
-  } else if (format === 'json') {
+  } else if (format === "json") {
     rules = parseJsonRules(content, path);
   }
 
@@ -330,7 +330,7 @@ export async function saveRulesFile(
     content = applyModification(content, mod);
   }
 
-  await writeFile(original.path, content, 'utf-8');
+  await writeFile(original.path, content, "utf-8");
   logger.info(`Saved modifications to ${original.path}`);
 
   return content;
@@ -362,7 +362,7 @@ This file provides guidance to Claude Code when working with this codebase.
 - Ensure tests pass before committing
 `;
 
-  await writeFile(path, defaultContent, 'utf-8');
+  await writeFile(path, defaultContent, "utf-8");
 
   return loadRulesFile(path);
 }

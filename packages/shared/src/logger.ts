@@ -2,7 +2,7 @@
  * Simple logger for Blackbox
  */
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
   debug: 0,
@@ -24,8 +24,8 @@ export class Logger {
 
   constructor(options: LoggerOptions = {}) {
     const envLevel = process.env.BLACKBOX_LOG_LEVEL as LogLevel | undefined;
-    this.level = LOG_LEVELS[options.level || envLevel || 'info'];
-    this.prefix = options.prefix || '';
+    this.level = LOG_LEVELS[options.level || envLevel || "info"];
+    this.prefix = options.prefix || "";
     this.showTimestamp = options.timestamp ?? true;
   }
 
@@ -44,7 +44,7 @@ export class Logger {
 
     parts.push(message);
 
-    return parts.join(' ');
+    return parts.join(" ");
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -52,26 +52,26 @@ export class Logger {
   }
 
   debug(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('debug')) {
-      console.debug(this.formatMessage('debug', message), ...args);
+    if (this.shouldLog("debug")) {
+      console.debug(this.formatMessage("debug", message), ...args);
     }
   }
 
   info(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('info')) {
-      console.info(this.formatMessage('info', message), ...args);
+    if (this.shouldLog("info")) {
+      console.info(this.formatMessage("info", message), ...args);
     }
   }
 
   warn(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', message), ...args);
+    if (this.shouldLog("warn")) {
+      console.warn(this.formatMessage("warn", message), ...args);
     }
   }
 
   error(message: string, ...args: unknown[]): void {
-    if (this.shouldLog('error')) {
-      console.error(this.formatMessage('error', message), ...args);
+    if (this.shouldLog("error")) {
+      console.error(this.formatMessage("error", message), ...args);
     }
   }
 

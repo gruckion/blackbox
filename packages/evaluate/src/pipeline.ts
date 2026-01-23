@@ -3,16 +3,16 @@
  * Orchestrates running multiple evaluators on traces
  */
 
-import { createLogger, type EvaluationResult, now, type Trace } from '@blackbox/shared';
-import { createLLMJudge, loopDetector, toolEfficiency } from './evaluators/index.js';
+import { createLogger, type EvaluationResult, now, type Trace } from "@blackbox/shared";
+import { createLLMJudge, loopDetector, toolEfficiency } from "./evaluators/index.js";
 import type {
   EvaluationPipelineConfig,
   Evaluator,
   EvaluatorContext,
   PipelineResult,
-} from './types.js';
+} from "./types.js";
 
-const logger = createLogger('eval-pipeline');
+const logger = createLogger("eval-pipeline");
 
 export class EvaluationPipeline {
   private readonly evaluators: Evaluator[];
@@ -26,7 +26,7 @@ export class EvaluationPipeline {
 
     if (this.debug) {
       logger.info(
-        `Pipeline initialized with ${this.evaluators.length} evaluators: ${this.evaluators.map((e) => e.config.name).join(', ')}`
+        `Pipeline initialized with ${this.evaluators.length} evaluators: ${this.evaluators.map((e) => e.config.name).join(", ")}`
       );
     }
   }
@@ -61,9 +61,9 @@ export class EvaluationPipeline {
             evaluatorName: evaluator.config.name,
             scores: [
               {
-                name: 'error',
+                name: "error",
                 value: 0,
-                explanation: `Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                explanation: `Evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
             timestamp,
@@ -91,9 +91,9 @@ export class EvaluationPipeline {
             evaluatorName: evaluator.config.name,
             scores: [
               {
-                name: 'error',
+                name: "error",
                 value: 0,
-                explanation: `Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                explanation: `Evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
             timestamp,
@@ -111,7 +111,7 @@ export class EvaluationPipeline {
         aggregateScores[score.name] = score.value;
 
         // Flag issues (low scores)
-        if (score.value < 0.5 && score.name !== 'error') {
+        if (score.value < 0.5 && score.name !== "error") {
           issues.push(
             `${result.evaluatorName}: ${score.name} = ${score.value.toFixed(2)} - ${score.explanation}`
           );

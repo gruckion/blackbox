@@ -2,11 +2,11 @@
  * Langfuse client wrapper for Blackbox
  */
 
-import { createLogger } from '@blackbox/shared';
-import { Langfuse } from 'langfuse';
-import type { CapturedCall } from './types.js';
+import { createLogger } from "@blackbox/shared";
+import { Langfuse } from "langfuse";
+import type { CapturedCall } from "./types.js";
 
-const logger = createLogger('langfuse-client');
+const logger = createLogger("langfuse-client");
 
 export interface LangfuseClientOptions {
   host: string;
@@ -45,12 +45,12 @@ export class LangfuseClient {
         provider: call.provider,
         parameters: call.parameters,
       },
-      tags: ['blackbox', 'captured'],
+      tags: ["blackbox", "captured"],
     });
 
     // Add the generation (LLM call)
     trace.generation({
-      name: 'llm-generation',
+      name: "llm-generation",
       model: call.model,
       modelParameters: call.parameters,
       input: call.messages,
@@ -121,7 +121,7 @@ export function createLangfuseClientFromEnv(): LangfuseClient | null {
   const secretKey = process.env.LANGFUSE_SECRET_KEY;
 
   if (!(host && publicKey && secretKey)) {
-    logger.warn('Langfuse credentials not configured');
+    logger.warn("Langfuse credentials not configured");
     return null;
   }
 
@@ -129,6 +129,6 @@ export function createLangfuseClientFromEnv(): LangfuseClient | null {
     host,
     publicKey,
     secretKey,
-    debug: process.env.BLACKBOX_LOG_LEVEL === 'debug',
+    debug: process.env.BLACKBOX_LOG_LEVEL === "debug",
   });
 }

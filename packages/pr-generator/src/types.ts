@@ -2,7 +2,7 @@
  * Types for PR generation
  */
 
-import type { RuleImprovement } from '@blackbox/shared';
+import type { RuleImprovement } from "@blackbox/shared";
 
 export interface PRGeneratorConfig {
   /**
@@ -109,7 +109,7 @@ export interface FileChange {
   /**
    * Change type
    */
-  type: 'create' | 'modify' | 'delete';
+  type: "create" | "modify" | "delete";
 }
 
 export interface CommitInfo {

@@ -29,6 +29,7 @@
     { "path": "./packages/pr-generator" },
     { "path": "./packages/cli" }
   ],
+  "include": [],
   "exclude": [
     "node_modules",
     "dist",

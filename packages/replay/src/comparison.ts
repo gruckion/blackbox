@@ -2,8 +2,8 @@
  * Comparison utilities for replay analysis
  */
 
-import { estimateTokens, textSimilarity } from '@blackbox/shared';
-import type { CallComparison, ReplayOutput } from './types.js';
+import { estimateTokens, textSimilarity } from "@blackbox/shared";
+import type { CallComparison, ReplayOutput } from "./types.js";
 
 export interface ComparisonSummary {
   /**
@@ -80,7 +80,7 @@ export function summarizeComparison(output: ReplayOutput): ComparisonSummary {
 
   // Estimate cost savings: assume $0.01 per 1K tokens for cloud vs ~$0 for local
   const originalTokens = callComparisons.reduce((sum, c) => {
-    return sum + estimateTokens(c.originalContent || '');
+    return sum + estimateTokens(c.originalContent || "");
   }, 0);
   const costSavingsEstimate = (originalTokens / 1000) * 0.01;
 
@@ -104,22 +104,22 @@ export function generateDiffReport(comparison: CallComparison): string {
   const lines: string[] = [];
 
   lines.push(`Call Comparison: ${comparison.originalCallId} vs ${comparison.replayCallId}`);
-  lines.push('-'.repeat(60));
+  lines.push("-".repeat(60));
 
   lines.push(`Similarity: ${(comparison.similarity * 100).toFixed(1)}%`);
-  lines.push(`Functional Match: ${comparison.functionalMatch ? 'Yes' : 'No'}`);
-  lines.push(`Token Diff: ${comparison.tokenDiff > 0 ? '+' : ''}${comparison.tokenDiff}`);
-  lines.push(`Latency Diff: ${comparison.latencyDiff > 0 ? '+' : ''}${comparison.latencyDiff}ms`);
+  lines.push(`Functional Match: ${comparison.functionalMatch ? "Yes" : "No"}`);
+  lines.push(`Token Diff: ${comparison.tokenDiff > 0 ? "+" : ""}${comparison.tokenDiff}`);
+  lines.push(`Latency Diff: ${comparison.latencyDiff > 0 ? "+" : ""}${comparison.latencyDiff}ms`);
 
-  lines.push('');
-  lines.push('Original:');
-  lines.push(comparison.originalContent || '(empty)');
+  lines.push("");
+  lines.push("Original:");
+  lines.push(comparison.originalContent || "(empty)");
 
-  lines.push('');
-  lines.push('Replay:');
-  lines.push(comparison.replayContent || '(empty)');
+  lines.push("");
+  lines.push("Replay:");
+  lines.push(comparison.replayContent || "(empty)");
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -176,7 +176,7 @@ export function areEquivalent(text1: string | null, text2: string | null): boole
   }
 
   // Normalize and compare
-  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, ' ').trim();
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
 
   const norm1 = normalize(text1);
   const norm2 = normalize(text2);

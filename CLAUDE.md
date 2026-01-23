@@ -18,6 +18,9 @@ bun run build
 # Run tests
 bun run test
 
+# Run integration tests
+bun run test:integration
+
 # Type check
 bun run typecheck
 
@@ -25,19 +28,25 @@ bun run typecheck
 bun run check        # Check linting and formatting
 bun run check:fix    # Auto-fix issues (includes --unsafe fixes)
 
-# Manual biome commands (if needed)
-bunx biome check --write --unsafe  # Apply all fixes including unsafe ones
+# Clean build artifacts
+bun run clean
 
 # Start infrastructure (Langfuse, Phoenix, LiteLLM)
 bun run docker:up
+bun run docker:down
 
 # CLI commands (after build)
-bun --filter @blackbox/cli start capture    # Start capture mode
-bun --filter @blackbox/cli start replay     # Replay traces
-bun --filter @blackbox/cli start evaluate   # Run evaluations
-bun --filter @blackbox/cli start improve    # Generate improvements
-bun --filter @blackbox/cli start pr         # Create PR
-bun --filter @blackbox/cli start run        # Full nightly pipeline
+node packages/cli/dist/index.js status              # Check service health
+node packages/cli/dist/index.js capture             # Start capture mode
+node packages/cli/dist/index.js replay              # Replay traces
+node packages/cli/dist/index.js evaluate            # Run evaluations
+node packages/cli/dist/index.js improve             # Generate improvements
+node packages/cli/dist/index.js run                 # Full nightly pipeline
+
+# Desktop app (Tauri)
+cd apps/desktop
+bun run tauri:dev     # Development mode
+bun run tauri:build   # Build desktop app
 ```
 
 ## Architecture
@@ -64,7 +73,26 @@ bun --filter @blackbox/cli start run        # Full nightly pipeline
 └──────────────┘                 └──────────────┘
 ```
 
-## Package Structure
+## Project Structure
+
+```
+blackbox/
+├── packages/           # Core library packages
+│   ├── shared/         # Shared types, schemas, utilities
+│   ├── capture/        # SDK wrapper for capturing LLM calls
+│   ├── replay/         # Replay engine for local model testing
+│   ├── evaluate/       # Evaluation framework with Phoenix
+│   ├── improve/        # Rules analysis and improvement
+│   ├── pr-generator/   # Git/GitHub PR creation
+│   └── cli/            # Command-line interface
+├── apps/
+│   └── desktop/        # Tauri desktop app (menu bar)
+├── example/            # Example traces and CLAUDE.md
+├── scripts/            # Development/testing scripts
+└── tests/              # Integration tests
+```
+
+## Package Details
 
 | Package | Purpose |
 |---------|---------|
@@ -75,17 +103,19 @@ bun --filter @blackbox/cli start run        # Full nightly pipeline
 | `@blackbox/improve` | Rules analysis and improvement |
 | `@blackbox/pr-generator` | Git/GitHub PR creation |
 | `@blackbox/cli` | Command-line interface |
+| `@blackbox/desktop` | Tauri desktop menu bar app |
 
 ## Key Files
 
-- `docker-compose.yml` - Infrastructure services
+- `docker-compose.yml` - Infrastructure services (Langfuse, Phoenix, LiteLLM, etc.)
 - `.env.example` - Environment variable template
 - `packages/*/src/index.ts` - Package entry points
-- `examples/sample-agent/` - Test agent for demos
+- `apps/desktop/src-tauri/` - Rust backend for desktop app
+- `example/traces/` - Sample trace files for testing
 
 ## Development Workflow
 
-1. Make changes in `packages/*/src/`
+1. Make changes in `packages/*/src/` or `apps/desktop/src/`
 2. Run `bun run typecheck` to verify types
 3. Run `bun run test` to run tests
 4. Run `bun run check:fix` to lint and format
@@ -99,3 +129,18 @@ bun --filter @blackbox/cli start run        # Full nightly pipeline
 | Phoenix | 6006 | http://localhost:6006 |
 | LiteLLM | 4000 | http://localhost:4000 |
 | Ollama | 11434 | http://localhost:11434 |
+| PostgreSQL | 5432 | localhost:5432 |
+| ClickHouse | 8123 | http://localhost:8123 |
+| Redis | 6379 | localhost:6379 |
+| MinIO | 9001 | http://localhost:9001 |
+
+## Testing the Pipeline
+
+```bash
+# Run with example traces (skipping replay for quick test)
+node packages/cli/dist/index.js run \
+  --input example/traces \
+  --rules example/CLAUDE.md \
+  --skip-replay \
+  --output ./test-output
+```

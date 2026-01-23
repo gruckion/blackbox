@@ -3,12 +3,12 @@
  * Uses an LLM to evaluate quality of responses
  */
 
-import type { EvaluationScore } from '@blackbox/shared';
-import { createLogger } from '@blackbox/shared';
-import OpenAI from 'openai';
-import type { Evaluator, EvaluatorContext, JudgePrompt } from '../types.js';
+import type { EvaluationScore } from "@blackbox/shared";
+import { createLogger } from "@blackbox/shared";
+import OpenAI from "openai";
+import type { Evaluator, EvaluatorContext, JudgePrompt } from "../types.js";
 
-const logger = createLogger('llm-judge');
+const logger = createLogger("llm-judge");
 
 // Top-level regex for score extraction
 const SCORE_REGEX = /\b([1-5])\b/;
@@ -108,14 +108,14 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
     openai = new OpenAI();
   }
 
-  const model = config.model || 'gpt-4o-mini';
+  const model = config.model || "gpt-4o-mini";
   const prompts = { ...DEFAULT_JUDGE_PROMPTS, ...config.prompts };
   const temperature = config.temperature ?? 0.3;
 
   return {
     config: {
-      name: 'llm-judge',
-      description: 'LLM-based quality evaluation',
+      name: "llm-judge",
+      description: "LLM-based quality evaluation",
       requiresLLM: true,
       model,
     },
@@ -130,34 +130,34 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
       if (!lastResponse?.response.content) {
         return [
           {
-            name: 'llm_judge_skipped',
+            name: "llm_judge_skipped",
             value: 0,
-            explanation: 'No response content to evaluate',
+            explanation: "No response content to evaluate",
           },
         ];
       }
 
       const content =
-        typeof lastResponse.response.content === 'string'
+        typeof lastResponse.response.content === "string"
           ? lastResponse.response.content
           : JSON.stringify(lastResponse.response.content);
 
       // Run each judge prompt
       for (const [name, prompt] of Object.entries(prompts)) {
         try {
-          const userPrompt = prompt.userTemplate.replace('{{content}}', content);
+          const userPrompt = prompt.userTemplate.replace("{{content}}", content);
 
           const response = await openai.chat.completions.create({
             model,
             temperature,
             messages: [
-              { role: 'system', content: `${prompt.system}\n\nRubric:\n${prompt.rubric}` },
-              { role: 'user', content: userPrompt },
+              { role: "system", content: `${prompt.system}\n\nRubric:\n${prompt.rubric}` },
+              { role: "user", content: userPrompt },
             ],
             max_tokens: 200,
           });
 
-          const judgeResponse = response.choices[0]?.message?.content || '';
+          const judgeResponse = response.choices[0]?.message?.content || "";
 
           // Extract score from response
           const scoreMatch = judgeResponse.match(SCORE_REGEX);
@@ -181,7 +181,7 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
           scores.push({
             name: `judge_${name}`,
             value: 0.5,
-            explanation: `Evaluation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            explanation: `Evaluation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
           });
         }
       }
@@ -190,7 +190,7 @@ export function createLLMJudge(config: LLMJudgeConfig = {}): Evaluator {
       if (scores.length > 0) {
         const avgScore = scores.reduce((sum, s) => sum + s.value, 0) / scores.length;
         scores.unshift({
-          name: 'judge_overall',
+          name: "judge_overall",
           value: avgScore,
           explanation: `Average judge score across ${scores.length} criteria`,
         });
