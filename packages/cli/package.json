@@ -1,0 +1,37 @@
+{
+  "name": "@blackbox/cli",
+  "version": "0.1.0",
+  "description": "Blackbox command-line interface",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "blackbox": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "start": "node ./dist/index.js"
+  },
+  "dependencies": {
+    "@blackbox/shared": "workspace:*",
+    "@blackbox/capture": "workspace:*",
+    "@blackbox/replay": "workspace:*",
+    "@blackbox/evaluate": "workspace:*",
+    "@blackbox/improve": "workspace:*",
+    "@blackbox/pr-generator": "workspace:*",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@types/node": "^20.10.0"
+  }
+}
