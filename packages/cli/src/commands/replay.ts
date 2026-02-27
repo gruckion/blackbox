@@ -15,7 +15,7 @@ export const replayCommand = new Command("replay")
   .option("-i, --input <path>", "Input directory with traces", "./traces")
   .option("-o, --output <path>", "Output directory for replay results", "./replay-results")
   .option("-m, --model <name>", "Model to replay against", "llama3.2:3b")
-  .option("--litellm <url>", "LiteLLM proxy URL", "http://localhost:4000")
+  .option("--litellm <url>", "LiteLLM proxy URL", "http://localhost:4213")
   .option("--mode <mode>", "Replay mode (exact, semi-live, live)", "semi-live")
   .option("--concurrency <n>", "Number of concurrent replays", "2")
   .action(async (options) => {
@@ -46,7 +46,7 @@ export const replayCommand = new Command("replay")
 
       // Create replay engine
       const config: ReplayEngineOptions = {
-        ollamaHost: options.litellm.replace(":4000", ":11434"), // Map to Ollama port
+        ollamaHost: options.litellm.replace(":4213", ":11434"), // Map to Ollama port
         defaultModel: options.model,
         defaultMode: options.mode,
       };

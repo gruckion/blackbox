@@ -43,10 +43,18 @@ node packages/cli/dist/index.js evaluate            # Run evaluations
 node packages/cli/dist/index.js improve             # Generate improvements
 node packages/cli/dist/index.js run                 # Full nightly pipeline
 
-# Desktop app (Tauri)
+# Desktop app (Tauri v2 + React + TypeScript + Tailwind CSS v4)
 cd apps/desktop
-bun run tauri:dev     # Development mode
-bun run tauri:build   # Build desktop app
+bun run dev           # Vite dev server only
+bun run build         # Build frontend
+bun run test          # Run frontend tests (Vitest)
+bun run tauri:dev     # Full Tauri development mode
+bun run tauri:build   # Build desktop app for distribution
+
+# Rust backend (in apps/desktop/src-tauri)
+cargo check           # Type check
+cargo test            # Run unit tests
+cargo clippy          # Lint
 ```
 
 ## Architecture
@@ -94,16 +102,16 @@ blackbox/
 
 ## Package Details
 
-| Package | Purpose |
-|---------|---------|
-| `@blackbox/shared` | Shared types, schemas, utilities |
-| `@blackbox/capture` | SDK wrapper for capturing LLM calls |
-| `@blackbox/replay` | Replay engine for local model testing |
-| `@blackbox/evaluate` | Evaluation framework with Phoenix |
-| `@blackbox/improve` | Rules analysis and improvement |
-| `@blackbox/pr-generator` | Git/GitHub PR creation |
-| `@blackbox/cli` | Command-line interface |
-| `@blackbox/desktop` | Tauri desktop menu bar app |
+| Package                  | Purpose                               |
+| ------------------------ | ------------------------------------- |
+| `@blackbox/shared`       | Shared types, schemas, utilities      |
+| `@blackbox/capture`      | SDK wrapper for capturing LLM calls   |
+| `@blackbox/replay`       | Replay engine for local model testing |
+| `@blackbox/evaluate`     | Evaluation framework with Phoenix     |
+| `@blackbox/improve`      | Rules analysis and improvement        |
+| `@blackbox/pr-generator` | Git/GitHub PR creation                |
+| `@blackbox/cli`          | Command-line interface                |
+| `@blackbox/desktop`      | Tauri desktop menu bar app            |
 
 ## Key Files
 
@@ -112,6 +120,43 @@ blackbox/
 - `packages/*/src/index.ts` - Package entry points
 - `apps/desktop/src-tauri/` - Rust backend for desktop app
 - `example/traces/` - Sample trace files for testing
+
+## Desktop App Details
+
+The desktop app (`apps/desktop`) is a macOS menu bar app built with:
+
+- **Tauri v2**: Native Rust backend for window management, tray icon, system APIs
+- **React 18**: UI framework with React Router for navigation
+- **TypeScript**: Strict type checking
+- **Tailwind CSS v4**: CSS-first configuration via `@theme` directive
+- **Vite**: Development server and bundler
+- **Vitest**: Unit testing framework
+
+### Tray Menu Actions
+
+The system tray menu provides:
+
+- **Open Blackbox** (⌘Space) - Opens the main window
+- **Send us Feedback** - Opens GitHub issues page
+- **Manual** - Opens documentation
+- **Troubleshooting** - Opens troubleshooting guide
+- **Join our Community** - Opens Slack/community page
+- **Follow us on X** - Opens Twitter/X profile
+- **Subscribe to our Channel** - Opens YouTube channel
+- **Version info** - Shows current version (disabled)
+- **About Blackbox** - Opens settings to about section
+- **Check for Updates** - Triggers update check
+- **Settings...** (⌘,) - Opens settings window
+- **Quit Blackbox** (⌘Q) - Exits the application
+
+### Key Files
+
+- `src/App.css` - Tailwind theme configuration (colors, fonts)
+- `src/App.tsx` - React Router setup (/, /settings routes)
+- `src/views/` - Page components (MainView, SettingsView)
+- `src/components/ui/` - Reusable UI components using CVA (class-variance-authority)
+- `src/components/theme-provider.tsx` - Theme management (light/dark/system)
+- `src-tauri/src/lib.rs` - Tray menu, commands, window management
 
 ## Development Workflow
 
@@ -123,16 +168,16 @@ blackbox/
 
 ## Infrastructure Ports
 
-| Service | Port | URL |
-|---------|------|-----|
-| Langfuse | 3000 | http://localhost:3000 |
-| Phoenix | 6006 | http://localhost:6006 |
-| LiteLLM | 4000 | http://localhost:4000 |
-| Ollama | 11434 | http://localhost:11434 |
-| PostgreSQL | 5432 | localhost:5432 |
-| ClickHouse | 8123 | http://localhost:8123 |
-| Redis | 6379 | localhost:6379 |
-| MinIO | 9001 | http://localhost:9001 |
+| Service    | Port  | URL                    |
+| ---------- | ----- | ---------------------- |
+| Langfuse   | 3213  | http://localhost:3213  |
+| Phoenix    | 6013  | http://localhost:6013  |
+| LiteLLM    | 4213  | http://localhost:4213  |
+| Ollama     | 11434 | http://localhost:11434 |
+| PostgreSQL | 5413  | localhost:5413         |
+| ClickHouse | 8113  | http://localhost:8113  |
+| Redis      | 6313  | localhost:6313         |
+| MinIO      | 9014  | http://localhost:9014  |
 
 ## Testing the Pipeline
 

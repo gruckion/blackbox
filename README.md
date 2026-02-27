@@ -63,7 +63,7 @@ node packages/cli/dist/index.js run -i ./traces --create-pr
 
 ## Project Structure
 
-```
+```text
 blackbox/
 ├── packages/           # Core library packages
 │   ├── shared/         # Shared types, schemas, utilities
@@ -81,40 +81,40 @@ blackbox/
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| `@blackbox/shared` | Core types and utilities |
-| `@blackbox/capture` | OpenAI SDK wrapper for trace capture |
-| `@blackbox/replay` | Replay engine for local model testing |
-| `@blackbox/evaluate` | Evaluation framework with Phoenix integration |
-| `@blackbox/improve` | Rules analysis and improvement generation |
-| `@blackbox/pr-generator` | Git/GitHub PR automation |
-| `@blackbox/cli` | Command-line interface |
-| `@blackbox/desktop` | Tauri desktop menu bar app |
+| Package                  | Description                                   |
+| ------------------------ | --------------------------------------------- |
+| `@blackbox/shared`       | Core types and utilities                      |
+| `@blackbox/capture`      | SDK wrapper for capturing LLM calls           |
+| `@blackbox/replay`       | Replay engine for local model testing         |
+| `@blackbox/evaluate`     | Evaluation framework with Phoenix integration |
+| `@blackbox/improve`      | Rules analysis and improvement generation     |
+| `@blackbox/pr-generator` | Git/GitHub PR creation and automation         |
+| `@blackbox/cli`          | Command-line interface                        |
+| `@blackbox/desktop`      | Tauri desktop menu bar app                    |
 
 ## Capture SDK
 
 Integrate capture into your coding agent:
 
 ```typescript
-import { createCaptureClient } from '@blackbox/capture';
+import { createCaptureClient } from "@blackbox/capture";
 
 // Create a capture-enabled OpenAI client
 const client = createCaptureClient(
   { apiKey: process.env.OPENAI_API_KEY },
   {
     langfuse: {
-      host: 'http://localhost:3000',
+      host: "http://localhost:3213",
       publicKey: process.env.LANGFUSE_PUBLIC_KEY,
       secretKey: process.env.LANGFUSE_SECRET_KEY,
     },
-  }
+  },
 );
 
 // Use like regular OpenAI SDK - calls are automatically captured
 const response = await client.chat.completions.create({
-  model: 'gpt-4o-mini',
-  messages: [{ role: 'user', content: 'Help me fix this bug' }],
+  model: "gpt-4o-mini",
+  messages: [{ role: "user", content: "Help me fix this bug" }],
   tools: myTools,
 });
 ```
@@ -177,31 +177,89 @@ node packages/cli/dist/index.js run \
   --github-repo yourrepo
 ```
 
-## Desktop App
+## Desktop Application
 
-Blackbox includes a Tauri-based desktop menu bar app for easy access to the pipeline status and controls.
+Blackbox includes a Tauri v2-based desktop menu bar app for macOS. The app lives in your menu bar for quick access to settings and controls.
+
+### Key Desktop Features
+
+- **Menu bar integration**: Lives in the macOS menu bar (system tray)
+- **Global hotkey**: Open Blackbox with ⌘Space (customizable)
+- **Settings panel**: Configure launch at login, global hotkey, appearance (light/dark/system)
+- **Minimal footprint**: No Dock icon, lightweight native performance
+
+### Tray Menu
+
+The system tray provides quick access to:
+
+- **Open Blackbox** - Main app window
+- **Documentation** - Manual and troubleshooting guides
+- **Community** - Slack, X (Twitter), YouTube links
+- **Settings** - App preferences
+- **About & Updates** - Version info and update checking
+
+### Tech Stack
+
+- **Tauri v2**: Native Rust backend with web frontend
+- **React 18**: UI framework with React Router
+- **TypeScript**: Type-safe frontend code
+- **Tailwind CSS v4**: CSS-first configuration, utility classes
+- **Vite**: Fast development and building
+
+### Desktop Development
 
 ```bash
 cd apps/desktop
 bun install
-bun run tauri:dev    # Development mode
+bun run tauri:dev    # Development mode with hot reload
 bun run tauri:build  # Build for production
+bun run test         # Run frontend tests
+```
+
+### Rust Backend Development
+
+```bash
+cd apps/desktop/src-tauri
+cargo check          # Type check Rust code
+cargo test           # Run Rust unit tests
+cargo clippy         # Lint Rust code
+```
+
+### Desktop Project Layout
+
+```text
+apps/desktop/
+├── src/                    # React frontend
+│   ├── App.tsx             # Main app with routing
+│   ├── App.css             # Tailwind CSS configuration
+│   ├── components/         # UI components
+│   │   ├── ui/             # Reusable UI primitives (Button, Input, etc.)
+│   │   ├── settings/       # Settings-specific components
+│   │   └── theme-provider.tsx  # Theme management (light/dark/system)
+│   ├── views/              # Page views (MainView, SettingsView)
+│   └── lib/                # Utilities and Tauri commands
+├── src-tauri/              # Rust backend
+│   ├── src/lib.rs          # Tray menu, commands, window management
+│   ├── tauri.conf.json     # Tauri configuration
+│   └── capabilities/       # Permission capabilities
+├── vite.config.ts          # Vite + Tailwind configuration
+└── package.json            # Frontend dependencies
 ```
 
 ## Infrastructure
 
 Blackbox uses these services (via Docker Compose):
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| Langfuse | 3000 | LLM observability and tracing |
-| Phoenix | 6006 | ML evaluation platform |
-| LiteLLM | 4000 | AI gateway for model routing |
-| Ollama | 11434 | Local model serving |
-| PostgreSQL | 5432 | Database for Langfuse |
-| ClickHouse | 8123 | Analytics for Langfuse |
-| Redis | 6379 | Caching |
-| MinIO | 9001 | Object storage |
+| Service    | Port  | Purpose                       |
+| ---------- | ----- | ----------------------------- |
+| Langfuse   | 3213  | LLM observability and tracing |
+| Phoenix    | 6013  | ML evaluation platform        |
+| LiteLLM    | 4213  | AI gateway for model routing  |
+| Ollama     | 11434 | Local model serving           |
+| PostgreSQL | 5413  | Database for Langfuse         |
+| ClickHouse | 8113  | Analytics for Langfuse        |
+| Redis      | 6313  | Caching                       |
+| MinIO      | 9014  | Object storage                |
 
 Start all services:
 
@@ -254,7 +312,7 @@ Create a `.env` file (see `.env.example`):
 OPENAI_API_KEY=sk-...
 
 # Langfuse (for tracing)
-LANGFUSE_HOST=http://localhost:3000
+LANGFUSE_HOST=http://localhost:3213
 LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_SECRET_KEY=sk-lf-...
 
@@ -296,17 +354,17 @@ bun run dev
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                       Blackbox CLI                          │
-├─────────────┬─────────────┬─────────────┬─────────────────┤
-│   Capture   │   Replay    │  Evaluate   │    Improve      │
-│     SDK     │   Engine    │  Pipeline   │   Generator     │
-├─────────────┴─────────────┴─────────────┴─────────────────┤
+├─────────────┬─────────────┬─────────────┬───────────────────┤
+│   Capture   │   Replay    │  Evaluate   │    Improve        │
+│     SDK     │   Engine    │  Pipeline   │   Generator       │
+├─────────────┴─────────────┴─────────────┴───────────────────┤
 │                    Shared Types & Utils                     │
 ├─────────────────────────────────────────────────────────────┤
-│   Langfuse   │   Phoenix   │   LiteLLM   │    Ollama      │
-│  (Tracing)   │(Evaluation) │  (Gateway)  │ (Local Models) │
+│   Langfuse   │   Phoenix   │   LiteLLM   │    Ollama        │
+│  (Tracing)   │(Evaluation) │  (Gateway)  │ (Local Models)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 

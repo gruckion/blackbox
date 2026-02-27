@@ -14,7 +14,7 @@ export const evaluateCommand = new Command("evaluate")
   .description("Evaluate traces for quality and issues")
   .option("-i, --input <path>", "Input directory with traces", "./traces")
   .option("-o, --output <path>", "Output directory for evaluation results", "./eval-results")
-  .option("--phoenix <url>", "Phoenix endpoint", "http://localhost:6006")
+  .option("--phoenix <url>", "Phoenix endpoint", "http://localhost:6013")
   .option("--llm-judge", "Enable LLM judge evaluation")
   .option("--loop-detection", "Enable loop detection", true)
   .action(async (options) => {

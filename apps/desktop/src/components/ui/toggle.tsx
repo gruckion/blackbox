@@ -1,5 +1,4 @@
 import type { InputHTMLAttributes } from "react";
-import styles from "./toggle.module.css";
 
 interface ToggleProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "onChange"> {
   checked?: boolean;
@@ -24,20 +23,31 @@ export function Toggle({
   };
 
   return (
-    <label className={`${styles.container} ${disabled ? styles.disabled : ""}`} htmlFor={toggleId}>
-      {label && <span className={styles.label}>{label}</span>}
-      <div className={styles.toggleWrapper}>
+    <label
+      className={`flex cursor-pointer items-center justify-between gap-3 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
+      htmlFor={toggleId}
+    >
+      {label && <span className="text-gray-300 text-sm">{label}</span>}
+      <div className="relative">
         <input
           checked={checked}
-          className={styles.input}
+          className="sr-only"
           disabled={disabled}
           id={toggleId}
           onChange={handleChange}
           type="checkbox"
           {...props}
         />
-        <div className={`${styles.track} ${checked ? styles.active : ""}`}>
-          <div className={styles.thumb} />
+        <div
+          className={`h-6 w-11 rounded-full transition-colors ${
+            checked ? "bg-accent" : "bg-surface-tertiary"
+          }`}
+        >
+          <div
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+              checked ? "translate-x-5" : "translate-x-0.5"
+            }`}
+          />
         </div>
       </div>
     </label>

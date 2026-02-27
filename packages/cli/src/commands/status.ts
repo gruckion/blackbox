@@ -101,9 +101,9 @@ async function checkOllamaModels(ollamaUrl: string): Promise<void> {
 
 export const statusCommand = new Command("status")
   .description("Check health of Blackbox services")
-  .option("--langfuse <url>", "Langfuse URL", "http://localhost:3000")
-  .option("--phoenix <url>", "Phoenix URL", "http://localhost:6006")
-  .option("--litellm <url>", "LiteLLM URL", "http://localhost:4000")
+  .option("--langfuse <url>", "Langfuse URL", "http://localhost:3213")
+  .option("--phoenix <url>", "Phoenix URL", "http://localhost:6013")
+  .option("--litellm <url>", "LiteLLM URL", "http://localhost:4213")
   .option("--ollama <url>", "Ollama URL", "http://localhost:11434")
   .action(async (options: StatusOptions) => {
     const spinner = ora("Checking services...").start();

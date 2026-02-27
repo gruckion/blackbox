@@ -4,7 +4,7 @@
  * Run with: npx tsx scripts/test-litellm.ts
  */
 
-const LITELLM_HOST = process.env.LITELLM_HOST || "http://localhost:4000";
+const LITELLM_HOST = process.env.LITELLM_HOST || "http://localhost:4213";
 const LITELLM_KEY = process.env.LITELLM_MASTER_KEY || "sk-blackbox-litellm-key";
 
 interface ModelInfo {

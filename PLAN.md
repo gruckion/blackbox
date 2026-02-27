@@ -8,13 +8,13 @@
 
 ### OSS Building Blocks (Validated)
 
-| Component | Solution | License | Why |
-|-----------|----------|---------|-----|
-| **Capture/Traces** | Langfuse | MIT | Self-hostable, OpenTelemetry support, session replay, 19k+ GitHub stars |
-| **Evaluation** | Arize Phoenix | Apache 2.0 | Deep agent evaluation, pre-built evaluators, 7.8k+ stars |
-| **Gateway/Proxy** | LiteLLM | MIT | 100+ model support, OpenAI-compatible, cost tracking |
-| **Local Models** | Ollama | MIT | Simple API, OpenAI-compatible endpoints, LoRA support |
-| **Parallel Dev** | git-worktree-runner | Apache 2.0 | Claude Code integration, per-branch isolation |
+| Component          | Solution            | License    | Why                                                                     |
+| ------------------ | ------------------- | ---------- | ----------------------------------------------------------------------- |
+| **Capture/Traces** | Langfuse            | MIT        | Self-hostable, OpenTelemetry support, session replay, 19k+ GitHub stars |
+| **Evaluation**     | Arize Phoenix       | Apache 2.0 | Deep agent evaluation, pre-built evaluators, 7.8k+ stars                |
+| **Gateway/Proxy**  | LiteLLM             | MIT        | 100+ model support, OpenAI-compatible, cost tracking                    |
+| **Local Models**   | Ollama              | MIT        | Simple API, OpenAI-compatible endpoints, LoRA support                   |
+| **Parallel Dev**   | git-worktree-runner | Apache 2.0 | Claude Code integration, per-branch isolation                           |
 
 ### Ruled Out (Not OSS or Limited)
 
@@ -633,9 +633,9 @@ pnpm install
 docker-compose up -d
 
 # Verify services
-curl http://localhost:3000  # Langfuse
-curl http://localhost:6006  # Phoenix
-curl http://localhost:4000  # LiteLLM
+curl http://localhost:3213  # Langfuse
+curl http://localhost:6013  # Phoenix
+curl http://localhost:4213  # LiteLLM
 curl http://localhost:11434 # Ollama
 
 # Phase 3: Build packages
@@ -660,16 +660,16 @@ pnpm --filter @blackbox/cli start run
 
 ## Timeline Estimate
 
-| Phase | Tasks | Parallel Workers | Est. Time |
-|-------|-------|------------------|-----------|
-| Phase 1 | 5 | 1 | 30 min |
-| Phase 3 Milestone 1 | 5 | 2 | 45 min |
-| Phase 3 Milestone 2 | 5 | 2 | 45 min |
-| Phase 3 Milestone 3 | 5 | 2 | 45 min |
-| Phase 3 Milestone 4 | 5 | 2 | 45 min |
-| Phase 3 Milestone 5 | 5 | 1 | 30 min |
-| Phase 3 Milestone 6 | 5 | 1 | 30 min |
-| **Total** | **35** | - | **~4-5 hours** |
+| Phase               | Tasks  | Parallel Workers | Est. Time      |
+| ------------------- | ------ | ---------------- | -------------- |
+| Phase 1             | 5      | 1                | 30 min         |
+| Phase 3 Milestone 1 | 5      | 2                | 45 min         |
+| Phase 3 Milestone 2 | 5      | 2                | 45 min         |
+| Phase 3 Milestone 3 | 5      | 2                | 45 min         |
+| Phase 3 Milestone 4 | 5      | 2                | 45 min         |
+| Phase 3 Milestone 5 | 5      | 1                | 30 min         |
+| Phase 3 Milestone 6 | 5      | 1                | 30 min         |
+| **Total**           | **35** | -                | **~4-5 hours** |
 
 ---
 

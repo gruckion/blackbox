@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import styles from "./segmented-control.module.css";
 
 interface SegmentOption {
   value: string;
@@ -50,7 +49,7 @@ export function SegmentedControl({
   return (
     <div
       aria-disabled={disabled}
-      className={`${styles.container} ${disabled ? styles.disabled : ""}`}
+      className={`inline-flex rounded-lg bg-surface-secondary p-1 ${disabled ? "opacity-50" : ""}`}
       role="radiogroup"
     >
       {options.map((option, index) => {
@@ -59,7 +58,9 @@ export function SegmentedControl({
           // biome-ignore lint/a11y/useSemanticElements: Button provides better UX for segmented control styling
           <button
             aria-checked={isSelected}
-            className={`${styles.segment} ${isSelected ? styles.selected : ""}`}
+            className={`flex items-center gap-2 rounded-md px-3 py-1.5 font-medium text-sm transition-colors ${
+              isSelected ? "bg-surface-tertiary text-white" : "text-gray-400 hover:text-gray-200"
+            }`}
             disabled={disabled}
             key={option.value}
             name={controlName}
@@ -69,8 +70,8 @@ export function SegmentedControl({
             tabIndex={isSelected ? 0 : -1}
             type="button"
           >
-            {option.icon && <span className={styles.icon}>{option.icon}</span>}
-            <span className={styles.label}>{option.label}</span>
+            {option.icon && <span>{option.icon}</span>}
+            <span>{option.label}</span>
           </button>
         );
       })}

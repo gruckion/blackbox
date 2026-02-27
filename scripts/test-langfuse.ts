@@ -5,13 +5,13 @@
  *
  * Prerequisites:
  *   1. Langfuse running: docker-compose up -d langfuse-web
- *   2. Create an API key in Langfuse UI at http://localhost:3000
+ *   2. Create an API key in Langfuse UI at http://localhost:3213
  *   3. Set LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY in .env
  */
 
 import { Langfuse } from "langfuse";
 
-const LANGFUSE_HOST = process.env.LANGFUSE_HOST || "http://localhost:3000";
+const LANGFUSE_HOST = process.env.LANGFUSE_HOST || "http://localhost:3213";
 const LANGFUSE_PUBLIC_KEY = process.env.LANGFUSE_PUBLIC_KEY || "";
 const LANGFUSE_SECRET_KEY = process.env.LANGFUSE_SECRET_KEY || "";
 
@@ -29,7 +29,7 @@ async function testLangfuse() {
     console.log("⚠ Langfuse API keys not configured");
     console.log("");
     console.log("To configure:");
-    console.log("  1. Open http://localhost:3000");
+    console.log("  1. Open http://localhost:3213");
     console.log("  2. Create an account and project");
     console.log("  3. Go to Settings > API Keys");
     console.log("  4. Create a new API key");

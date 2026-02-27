@@ -3,9 +3,15 @@
 
 use serde::{Deserialize, Serialize};
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItemBuilder, PredefinedMenuItem},
     tray::TrayIconBuilder,
+    Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
+
+#[cfg(desktop)]
+use tauri_plugin_autostart::AutoLaunchManager;
+#[cfg(desktop)]
+use tauri_plugin_global_shortcut::{Code, Modifiers, ShortcutState};
 
 /// Application settings structure for frontend-backend communication
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -42,20 +48,67 @@ fn open_external_url(url: String, app: tauri::AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Enables launch at login
+#[cfg(desktop)]
+#[tauri::command]
+fn enable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+    let manager = app.state::<AutoLaunchManager>();
+    manager.enable().map_err(|e| e.to_string())
+}
+
+/// Disables launch at login
+#[cfg(desktop)]
+#[tauri::command]
+fn disable_autostart(app: tauri::AppHandle) -> Result<(), String> {
+    let manager = app.state::<AutoLaunchManager>();
+    manager.disable().map_err(|e| e.to_string())
+}
+
+/// Checks if launch at login is enabled
+#[cfg(desktop)]
+#[tauri::command]
+fn is_autostart_enabled(app: tauri::AppHandle) -> Result<bool, String> {
+    let manager = app.state::<AutoLaunchManager>();
+    manager.is_enabled().map_err(|e| e.to_string())
+}
+
 /// Window configuration constants
 pub mod config {
     /// Default window title
     pub const WINDOW_TITLE: &str = "Blackbox";
     /// Default window label/identifier
     pub const WINDOW_LABEL: &str = "main";
+    /// Settings window label
+    pub const SETTINGS_LABEL: &str = "settings";
     /// Default window width
     pub const WINDOW_WIDTH: f64 = 400.0;
     /// Default window height
     pub const WINDOW_HEIGHT: f64 = 300.0;
-    /// Menu item ID for quit action
+    /// Settings window width
+    pub const SETTINGS_WIDTH: f64 = 480.0;
+    /// Settings window height
+    pub const SETTINGS_HEIGHT: f64 = 400.0;
+
+    // Menu item IDs
+    pub const MENU_OPEN_ID: &str = "open";
+    pub const MENU_FEEDBACK_ID: &str = "feedback";
+    pub const MENU_MANUAL_ID: &str = "manual";
+    pub const MENU_TROUBLESHOOTING_ID: &str = "troubleshooting";
+    pub const MENU_SLACK_ID: &str = "slack";
+    pub const MENU_TWITTER_ID: &str = "twitter";
+    pub const MENU_YOUTUBE_ID: &str = "youtube";
+    pub const MENU_ABOUT_ID: &str = "about";
+    pub const MENU_UPDATES_ID: &str = "updates";
+    pub const MENU_SETTINGS_ID: &str = "settings";
     pub const MENU_QUIT_ID: &str = "quit";
-    /// Menu item label for quit action
-    pub const MENU_QUIT_LABEL: &str = "Quit Blackbox";
+
+    // External URLs
+    pub const URL_FEEDBACK: &str = "https://github.com/blackbox-dev/blackbox/issues/new";
+    pub const URL_MANUAL: &str = "https://blackbox.dev/docs";
+    pub const URL_TROUBLESHOOTING: &str = "https://blackbox.dev/docs/troubleshooting";
+    pub const URL_SLACK: &str = "https://blackbox.dev/community";
+    pub const URL_TWITTER: &str = "https://twitter.com/blackboxdev";
+    pub const URL_YOUTUBE: &str = "https://youtube.com/@blackboxdev";
 }
 
 /// Represents the visibility state of a window
@@ -121,8 +174,18 @@ impl Default for WindowDimensions {
 }
 
 /// Menu event handler result
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MenuAction {
+    Open,
+    Feedback,
+    Manual,
+    Troubleshooting,
+    Slack,
+    Twitter,
+    YouTube,
+    About,
+    CheckUpdates,
+    Settings,
     Quit,
     Unknown,
 }
@@ -131,6 +194,16 @@ impl MenuAction {
     /// Parses a menu event ID into a MenuAction
     pub fn from_id(id: &str) -> Self {
         match id {
+            config::MENU_OPEN_ID => MenuAction::Open,
+            config::MENU_FEEDBACK_ID => MenuAction::Feedback,
+            config::MENU_MANUAL_ID => MenuAction::Manual,
+            config::MENU_TROUBLESHOOTING_ID => MenuAction::Troubleshooting,
+            config::MENU_SLACK_ID => MenuAction::Slack,
+            config::MENU_TWITTER_ID => MenuAction::Twitter,
+            config::MENU_YOUTUBE_ID => MenuAction::YouTube,
+            config::MENU_ABOUT_ID => MenuAction::About,
+            config::MENU_UPDATES_ID => MenuAction::CheckUpdates,
+            config::MENU_SETTINGS_ID => MenuAction::Settings,
             config::MENU_QUIT_ID => MenuAction::Quit,
             _ => MenuAction::Unknown,
         }
@@ -139,6 +212,19 @@ impl MenuAction {
     /// Returns true if this action should exit the application
     pub fn should_exit(&self) -> bool {
         matches!(self, MenuAction::Quit)
+    }
+
+    /// Returns the URL to open for external link actions
+    pub fn get_url(&self) -> Option<&'static str> {
+        match self {
+            MenuAction::Feedback => Some(config::URL_FEEDBACK),
+            MenuAction::Manual => Some(config::URL_MANUAL),
+            MenuAction::Troubleshooting => Some(config::URL_TROUBLESHOOTING),
+            MenuAction::Slack => Some(config::URL_SLACK),
+            MenuAction::Twitter => Some(config::URL_TWITTER),
+            MenuAction::YouTube => Some(config::URL_YOUTUBE),
+            _ => None,
+        }
     }
 }
 
@@ -171,6 +257,34 @@ impl WindowAction {
     }
 }
 
+/// Helper to open a URL in the default browser
+fn open_url_helper(app: &tauri::AppHandle, url: &str) {
+    use tauri_plugin_opener::OpenerExt;
+    let _ = app.opener().open_url(url, None::<&str>);
+}
+
+/// Helper to show or create a window
+fn show_or_create_window(
+    app: &tauri::AppHandle,
+    label: &str,
+    title: &str,
+    url: &str,
+    width: f64,
+    height: f64,
+) {
+    if let Some(window) = app.get_webview_window(label) {
+        let _ = window.show();
+        let _ = window.set_focus();
+    } else {
+        let _ = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
+            .title(title)
+            .inner_size(width, height)
+            .resizable(true)
+            .center()
+            .build();
+    }
+}
+
 /// Runs the Tauri application
 ///
 /// This function sets up the tray icon, menu, and window management
@@ -179,29 +293,189 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![get_app_version, open_external_url])
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
+        .invoke_handler(tauri::generate_handler![
+            get_app_version,
+            open_external_url,
+            enable_autostart,
+            disable_autostart,
+            is_autostart_enabled
+        ])
         .setup(|app| {
-            // Create menu items for the tray
-            let quit_i = MenuItem::with_id(
-                app,
-                config::MENU_QUIT_ID,
-                config::MENU_QUIT_LABEL,
-                true,
-                None::<&str>,
-            )?;
-            let menu = Menu::with_items(app, &[&quit_i])?;
+            let version = env!("CARGO_PKG_VERSION");
 
-            // Build the tray icon (icon is set via tauri.conf.json trayIcon config)
-            let _tray = TrayIconBuilder::new()
+            // Create menu items
+            let open_item = MenuItemBuilder::with_id(config::MENU_OPEN_ID, "Open Blackbox")
+                .accelerator("CmdOrCtrl+Space")
+                .build(app)?;
+
+            let feedback_item =
+                MenuItemBuilder::with_id(config::MENU_FEEDBACK_ID, "Send us Feedback").build(app)?;
+            let manual_item =
+                MenuItemBuilder::with_id(config::MENU_MANUAL_ID, "Manual").build(app)?;
+            let troubleshooting_item =
+                MenuItemBuilder::with_id(config::MENU_TROUBLESHOOTING_ID, "Troubleshooting")
+                    .build(app)?;
+
+            let slack_item = MenuItemBuilder::with_id(config::MENU_SLACK_ID, "Join our Community")
+                .build(app)?;
+            let twitter_item =
+                MenuItemBuilder::with_id(config::MENU_TWITTER_ID, "Follow us on X").build(app)?;
+            let youtube_item =
+                MenuItemBuilder::with_id(config::MENU_YOUTUBE_ID, "Subscribe to our Channel")
+                    .build(app)?;
+
+            let version_item = MenuItemBuilder::new(format!("Version {}", version))
+                .enabled(false)
+                .build(app)?;
+            let about_item =
+                MenuItemBuilder::with_id(config::MENU_ABOUT_ID, "About Blackbox").build(app)?;
+            let updates_item =
+                MenuItemBuilder::with_id(config::MENU_UPDATES_ID, "Check for Updates").build(app)?;
+
+            let settings_item = MenuItemBuilder::with_id(config::MENU_SETTINGS_ID, "Settings...")
+                .accelerator("CmdOrCtrl+,")
+                .build(app)?;
+            let quit_item = MenuItemBuilder::with_id(config::MENU_QUIT_ID, "Quit Blackbox")
+                .accelerator("CmdOrCtrl+Q")
+                .build(app)?;
+
+            // Create separators
+            let sep1 = PredefinedMenuItem::separator(app)?;
+            let sep2 = PredefinedMenuItem::separator(app)?;
+            let sep3 = PredefinedMenuItem::separator(app)?;
+            let sep4 = PredefinedMenuItem::separator(app)?;
+
+            // Build the menu
+            let menu = Menu::with_items(
+                app,
+                &[
+                    &open_item,
+                    &sep1,
+                    &feedback_item,
+                    &manual_item,
+                    &troubleshooting_item,
+                    &sep2,
+                    &slack_item,
+                    &twitter_item,
+                    &youtube_item,
+                    &sep3,
+                    &version_item,
+                    &about_item,
+                    &updates_item,
+                    &sep4,
+                    &settings_item,
+                    &quit_item,
+                ],
+            )?;
+
+            // Build the tray icon
+            let _tray = TrayIconBuilder::with_id("main")
+                .icon(tauri::include_image!("icons/tray-icon.png"))
+                .icon_as_template(true)
+                .tooltip("Blackbox")
                 .menu(&menu)
                 .show_menu_on_left_click(true)
                 .on_menu_event(|app, event| {
                     let action = MenuAction::from_id(event.id.as_ref());
-                    if action.should_exit() {
-                        app.exit(0);
+
+                    // Handle URL actions
+                    if let Some(url) = action.get_url() {
+                        open_url_helper(app, url);
+                        return;
+                    }
+
+                    // Handle other actions
+                    match action {
+                        MenuAction::Open => {
+                            show_or_create_window(
+                                app,
+                                config::WINDOW_LABEL,
+                                config::WINDOW_TITLE,
+                                "/",
+                                config::WINDOW_WIDTH,
+                                config::WINDOW_HEIGHT,
+                            );
+                        }
+                        MenuAction::Settings => {
+                            show_or_create_window(
+                                app,
+                                config::SETTINGS_LABEL,
+                                "Settings",
+                                "/settings",
+                                config::SETTINGS_WIDTH,
+                                config::SETTINGS_HEIGHT,
+                            );
+                        }
+                        MenuAction::About => {
+                            // For now, open settings to About tab
+                            show_or_create_window(
+                                app,
+                                config::SETTINGS_LABEL,
+                                "Settings",
+                                "/settings",
+                                config::SETTINGS_WIDTH,
+                                config::SETTINGS_HEIGHT,
+                            );
+                            // Emit event to switch to about tab
+                            let _ = app.emit("navigate-to-about", ());
+                        }
+                        MenuAction::CheckUpdates => {
+                            // TODO: Implement update checking
+                            // For now, show a message
+                            let _ = app.emit("check-updates", ());
+                        }
+                        MenuAction::Quit => {
+                            app.exit(0);
+                        }
+                        _ => {}
                     }
                 })
                 .build(app)?;
+
+            // Register global shortcut (Cmd+Space on macOS, Ctrl+Space on other platforms)
+            #[cfg(desktop)]
+            {
+                let handle = app.handle().clone();
+                app.handle().plugin(
+                    tauri_plugin_global_shortcut::Builder::new()
+                        .with_shortcut("CommandOrControl+Space")?
+                        .with_handler(move |_app, shortcut, event| {
+                            if event.state == ShortcutState::Pressed {
+                                // Check if it's our shortcut (Cmd/Ctrl + Space)
+                                let is_cmd_space = shortcut.matches(Modifiers::META, Code::Space)
+                                    || shortcut.matches(Modifiers::CONTROL, Code::Space);
+
+                                if is_cmd_space {
+                                    // Show or create the main window
+                                    if let Some(window) = handle.get_webview_window(config::WINDOW_LABEL) {
+                                        if window.is_visible().unwrap_or(false) {
+                                            let _ = window.hide();
+                                        } else {
+                                            let _ = window.show();
+                                            let _ = window.set_focus();
+                                        }
+                                    } else {
+                                        let _ = WebviewWindowBuilder::new(
+                                            &handle,
+                                            config::WINDOW_LABEL,
+                                            WebviewUrl::App("/".into()),
+                                        )
+                                        .title(config::WINDOW_TITLE)
+                                        .inner_size(config::WINDOW_WIDTH, config::WINDOW_HEIGHT)
+                                        .resizable(true)
+                                        .center()
+                                        .build();
+                                    }
+                                }
+                            }
+                        })
+                        .build(),
+                )?;
+            }
 
             // Hide from Dock - this is a menu bar only app
             #[cfg(target_os = "macos")]
@@ -317,7 +591,20 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_from_id_quit() {
+        fn test_from_id_all_actions() {
+            assert_eq!(MenuAction::from_id("open"), MenuAction::Open);
+            assert_eq!(MenuAction::from_id("feedback"), MenuAction::Feedback);
+            assert_eq!(MenuAction::from_id("manual"), MenuAction::Manual);
+            assert_eq!(
+                MenuAction::from_id("troubleshooting"),
+                MenuAction::Troubleshooting
+            );
+            assert_eq!(MenuAction::from_id("slack"), MenuAction::Slack);
+            assert_eq!(MenuAction::from_id("twitter"), MenuAction::Twitter);
+            assert_eq!(MenuAction::from_id("youtube"), MenuAction::YouTube);
+            assert_eq!(MenuAction::from_id("about"), MenuAction::About);
+            assert_eq!(MenuAction::from_id("updates"), MenuAction::CheckUpdates);
+            assert_eq!(MenuAction::from_id("settings"), MenuAction::Settings);
             assert_eq!(MenuAction::from_id("quit"), MenuAction::Quit);
         }
 
@@ -325,7 +612,7 @@ mod tests {
         fn test_from_id_unknown() {
             assert_eq!(MenuAction::from_id("unknown"), MenuAction::Unknown);
             assert_eq!(MenuAction::from_id(""), MenuAction::Unknown);
-            assert_eq!(MenuAction::from_id("settings"), MenuAction::Unknown);
+            assert_eq!(MenuAction::from_id("random"), MenuAction::Unknown);
         }
 
         #[test]
@@ -334,8 +621,34 @@ mod tests {
         }
 
         #[test]
-        fn test_should_exit_unknown() {
+        fn test_should_exit_other_actions() {
+            assert!(!MenuAction::Open.should_exit());
+            assert!(!MenuAction::Settings.should_exit());
             assert!(!MenuAction::Unknown.should_exit());
+        }
+
+        #[test]
+        fn test_get_url_external_links() {
+            assert_eq!(
+                MenuAction::Feedback.get_url(),
+                Some(config::URL_FEEDBACK)
+            );
+            assert_eq!(MenuAction::Manual.get_url(), Some(config::URL_MANUAL));
+            assert_eq!(
+                MenuAction::Troubleshooting.get_url(),
+                Some(config::URL_TROUBLESHOOTING)
+            );
+            assert_eq!(MenuAction::Slack.get_url(), Some(config::URL_SLACK));
+            assert_eq!(MenuAction::Twitter.get_url(), Some(config::URL_TWITTER));
+            assert_eq!(MenuAction::YouTube.get_url(), Some(config::URL_YOUTUBE));
+        }
+
+        #[test]
+        fn test_get_url_non_link_actions() {
+            assert_eq!(MenuAction::Open.get_url(), None);
+            assert_eq!(MenuAction::Settings.get_url(), None);
+            assert_eq!(MenuAction::Quit.get_url(), None);
+            assert_eq!(MenuAction::Unknown.get_url(), None);
         }
     }
 
@@ -395,13 +708,39 @@ mod tests {
         use super::*;
 
         #[test]
-        fn test_config_values() {
+        fn test_window_config() {
             assert_eq!(config::WINDOW_TITLE, "Blackbox");
             assert_eq!(config::WINDOW_LABEL, "main");
+            assert_eq!(config::SETTINGS_LABEL, "settings");
             assert_eq!(config::WINDOW_WIDTH, 400.0);
             assert_eq!(config::WINDOW_HEIGHT, 300.0);
+            assert_eq!(config::SETTINGS_WIDTH, 480.0);
+            assert_eq!(config::SETTINGS_HEIGHT, 400.0);
+        }
+
+        #[test]
+        fn test_menu_ids() {
+            assert_eq!(config::MENU_OPEN_ID, "open");
+            assert_eq!(config::MENU_FEEDBACK_ID, "feedback");
+            assert_eq!(config::MENU_MANUAL_ID, "manual");
+            assert_eq!(config::MENU_TROUBLESHOOTING_ID, "troubleshooting");
+            assert_eq!(config::MENU_SLACK_ID, "slack");
+            assert_eq!(config::MENU_TWITTER_ID, "twitter");
+            assert_eq!(config::MENU_YOUTUBE_ID, "youtube");
+            assert_eq!(config::MENU_ABOUT_ID, "about");
+            assert_eq!(config::MENU_UPDATES_ID, "updates");
+            assert_eq!(config::MENU_SETTINGS_ID, "settings");
             assert_eq!(config::MENU_QUIT_ID, "quit");
-            assert_eq!(config::MENU_QUIT_LABEL, "Quit Blackbox");
+        }
+
+        #[test]
+        fn test_external_urls() {
+            assert!(config::URL_FEEDBACK.starts_with("https://"));
+            assert!(config::URL_MANUAL.starts_with("https://"));
+            assert!(config::URL_TROUBLESHOOTING.starts_with("https://"));
+            assert!(config::URL_SLACK.starts_with("https://"));
+            assert!(config::URL_TWITTER.starts_with("https://"));
+            assert!(config::URL_YOUTUBE.starts_with("https://"));
         }
     }
 }

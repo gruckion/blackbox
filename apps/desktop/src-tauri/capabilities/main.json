@@ -15,6 +15,8 @@
     "core:menu:default",
     "core:tray:default",
     "opener:default",
-    "store:default"
+    "store:default",
+    "global-shortcut:default",
+    "autostart:default"
   ]
 }

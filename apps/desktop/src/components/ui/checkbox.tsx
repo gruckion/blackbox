@@ -1,5 +1,4 @@
 import type { InputHTMLAttributes } from "react";
-import styles from "./checkbox.module.css";
 
 interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "onChange"> {
   checked?: boolean;
@@ -27,13 +26,13 @@ export function Checkbox({
 
   return (
     <label
-      className={`${styles.container} ${disabled ? styles.disabled : ""}`}
+      className={`flex cursor-pointer items-center gap-2 ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
       htmlFor={checkboxId}
     >
-      <div className={styles.checkboxWrapper}>
+      <div className="relative">
         <input
           checked={checked}
-          className={styles.input}
+          className="sr-only"
           disabled={disabled}
           id={checkboxId}
           onChange={handleChange}
@@ -46,20 +45,18 @@ export function Checkbox({
           {...props}
         />
         <div
-          className={`${styles.checkbox} ${checked ? styles.checked : ""} ${indeterminate ? styles.indeterminate : ""}`}
+          className="flex h-5 w-5 items-center justify-center rounded border-2 transition-colors"
+          style={{
+            borderColor: checked || indeterminate ? "var(--color-accent)" : "var(--color-border)",
+            backgroundColor:
+              checked || indeterminate ? "var(--color-accent)" : "var(--color-surface-secondary)",
+          }}
         >
           {checked && !indeterminate && (
-            <svg
-              aria-hidden="true"
-              className={styles.checkIcon}
-              fill="none"
-              height="12"
-              viewBox="0 0 12 12"
-              width="12"
-            >
+            <svg aria-hidden="true" fill="none" height="12" viewBox="0 0 12 12" width="12">
               <path
                 d="M2 6L5 9L10 3"
-                stroke="currentColor"
+                stroke="white"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
@@ -67,20 +64,17 @@ export function Checkbox({
             </svg>
           )}
           {indeterminate && (
-            <svg
-              aria-hidden="true"
-              className={styles.checkIcon}
-              fill="none"
-              height="12"
-              viewBox="0 0 12 12"
-              width="12"
-            >
-              <path d="M2.5 6H9.5" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+            <svg aria-hidden="true" fill="none" height="12" viewBox="0 0 12 12" width="12">
+              <path d="M2.5 6H9.5" stroke="white" strokeLinecap="round" strokeWidth="2" />
             </svg>
           )}
         </div>
       </div>
-      {label && <span className={styles.label}>{label}</span>}
+      {label && (
+        <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+          {label}
+        </span>
+      )}
     </label>
   );
 }

@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 export type AppearanceMode = "light" | "dark" | "system";
 
 interface AppearanceToggleProps {
@@ -13,68 +11,17 @@ interface AppearanceOption {
   label: string;
 }
 
-const styles: Record<string, CSSProperties> = {
-  container: {
-    display: "inline-flex",
-    backgroundColor: "#2a2a2a",
-    borderRadius: 8,
-    padding: 4,
-    gap: 2,
-  },
-  label: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: 4,
-    padding: "8px 16px",
-    borderRadius: 6,
-    cursor: "pointer",
-    transition: "background-color 0.15s ease",
-    minWidth: 72,
-  },
-  labelDefault: {
-    backgroundColor: "transparent",
-    color: "#888",
-  },
-  labelSelected: {
-    backgroundColor: "#3a3a3a",
-    color: "#fff",
-  },
-  icon: {
-    width: 20,
-    height: 20,
-  },
-  labelText: {
-    fontSize: 11,
-    fontWeight: 500,
-    letterSpacing: 0.2,
-  },
-  hiddenInput: {
-    position: "absolute",
-    width: 1,
-    height: 1,
-    padding: 0,
-    margin: -1,
-    overflow: "hidden",
-    clip: "rect(0, 0, 0, 0)",
-    whiteSpace: "nowrap",
-    border: 0,
-  },
-};
-
-/** Sun icon for light mode */
 function SunIcon() {
   return (
     <svg
       aria-hidden="true"
+      className="h-5 w-5"
       fill="none"
-      height="20"
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="2"
       viewBox="0 0 24 24"
-      width="20"
     >
       <circle cx="12" cy="12" r="5" />
       <line x1="12" x2="12" y1="1" y2="3" />
@@ -89,38 +36,34 @@ function SunIcon() {
   );
 }
 
-/** Moon icon for dark mode */
 function MoonIcon() {
   return (
     <svg
       aria-hidden="true"
+      className="h-5 w-5"
       fill="none"
-      height="20"
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="2"
       viewBox="0 0 24 24"
-      width="20"
     >
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
 }
 
-/** Auto/System icon */
 function SystemIcon() {
   return (
     <svg
       aria-hidden="true"
+      className="h-5 w-5"
       fill="none"
-      height="20"
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="2"
       viewBox="0 0 24 24"
-      width="20"
     >
       <rect height="14" rx="2" ry="2" width="20" x="2" y="3" />
       <line x1="8" x2="16" y1="21" y2="21" />
@@ -135,38 +78,35 @@ const options: AppearanceOption[] = [
   { mode: "system", icon: <SystemIcon />, label: "System" },
 ];
 
-/**
- * A three-option segmented control for selecting appearance mode
- * Styled similar to Raycast's appearance toggle
- */
 export function AppearanceToggle({ value, onChange }: AppearanceToggleProps) {
-  const handleChange = (mode: AppearanceMode) => {
-    onChange(mode);
-  };
-
   return (
-    <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
-      <legend style={styles.hiddenInput as CSSProperties}>Appearance</legend>
-      <div style={styles.container}>
+    <fieldset className="m-0 border-0 p-0">
+      <legend className="sr-only">Appearance</legend>
+      <div
+        className="inline-flex gap-0.5 rounded-lg p-1"
+        style={{ backgroundColor: "var(--color-surface-secondary)" }}
+      >
         {options.map((option) => {
           const isSelected = value === option.mode;
-          const labelStyle = {
-            ...styles.label,
-            ...(isSelected ? styles.labelSelected : styles.labelDefault),
-          };
-
           return (
-            <label key={option.mode} style={labelStyle}>
+            <label
+              className="flex min-w-[72px] cursor-pointer flex-col items-center gap-1 rounded-md px-4 py-2 transition-colors"
+              key={option.mode}
+              style={{
+                backgroundColor: isSelected ? "var(--color-surface-tertiary)" : "transparent",
+                color: isSelected ? "var(--color-text-primary)" : "var(--color-text-muted)",
+              }}
+            >
               <input
                 checked={isSelected}
+                className="sr-only"
                 name="appearance-mode"
-                onChange={() => handleChange(option.mode)}
-                style={styles.hiddenInput as CSSProperties}
+                onChange={() => onChange(option.mode)}
                 type="radio"
                 value={option.mode}
               />
-              <span style={styles.icon}>{option.icon}</span>
-              <span style={styles.labelText}>{option.label}</span>
+              <span>{option.icon}</span>
+              <span className="font-medium text-xs tracking-wide">{option.label}</span>
             </label>
           );
         })}

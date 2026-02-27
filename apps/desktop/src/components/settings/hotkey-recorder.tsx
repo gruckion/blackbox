@@ -1,75 +1,13 @@
-import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatShortcut, isValidShortcut, parseKeyboardEvent } from "../../lib/keyboard-utils";
 
 interface HotkeyRecorderProps {
-  /** Current shortcut value in Tauri format (e.g., "CommandOrControl+Space") */
   value: string;
-  /** Callback when a new shortcut is recorded */
   onChange: (value: string) => void;
-  /** Placeholder text when no shortcut is set */
   placeholder?: string;
 }
 
-const styles: Record<string, CSSProperties> = {
-  container: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minWidth: 120,
-    padding: "8px 16px",
-    backgroundColor: "#3a3a3a",
-    borderRadius: 8,
-    border: "1px solid #4a4a4a",
-    cursor: "pointer",
-    transition: "all 0.15s ease",
-    outline: "none",
-    fontFamily: "inherit",
-  },
-  containerRecording: {
-    backgroundColor: "#2a4a6a",
-    borderColor: "#4a8ac4",
-    boxShadow: "0 0 0 2px rgba(74, 138, 196, 0.3)",
-  },
-  containerHover: {
-    backgroundColor: "#444",
-    borderColor: "#555",
-  },
-  shortcutDisplay: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    fontSize: 14,
-    fontWeight: 500,
-    color: "#fff",
-    letterSpacing: 0.5,
-  },
-  recordingText: {
-    fontSize: 13,
-    color: "#8ac4ea",
-    fontStyle: "italic",
-  },
-  placeholder: {
-    fontSize: 13,
-    color: "#888",
-  },
-  keyBadge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "2px 6px",
-    backgroundColor: "#555",
-    borderRadius: 4,
-    fontSize: 13,
-    fontWeight: 600,
-    minWidth: 24,
-  },
-};
-
-/**
- * A component for recording keyboard shortcuts
- * Click to start recording, press keys to set shortcut, Escape to cancel
- */
 const DEFAULT_PLACEHOLDER = "Click to record";
 
 export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderProps) {
@@ -89,7 +27,6 @@ export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderP
   const handleKeyDown = useCallback(
     (event: ReactKeyboardEvent<HTMLButtonElement>) => {
       if (!isRecording) {
-        // Start recording on any key press when not recording
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           startRecording();
@@ -100,16 +37,13 @@ export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderP
       event.preventDefault();
       event.stopPropagation();
 
-      // Cancel recording on Escape
       if (event.key === "Escape") {
         stopRecording();
         return;
       }
 
-      // Parse the keyboard event
       const shortcut = parseKeyboardEvent(event.nativeEvent);
 
-      // Only accept valid shortcuts (with at least one modifier)
       if (shortcut && isValidShortcut(shortcut)) {
         onChange(shortcut);
         stopRecording();
@@ -118,7 +52,6 @@ export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderP
     [isRecording, onChange, startRecording, stopRecording]
   );
 
-  // Handle click outside to cancel recording
   useEffect(() => {
     if (!isRecording) {
       return;
@@ -136,35 +69,62 @@ export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderP
     };
   }, [isRecording, stopRecording]);
 
-  // Format the current shortcut for display
   const displayValue = value ? formatShortcut(value) : "";
   const displayParts = displayValue.split(" ").filter(Boolean);
 
-  // Determine container style
-  const containerStyle: CSSProperties = {
-    ...styles.container,
-    ...(isRecording ? styles.containerRecording : {}),
-    ...(isHovered && !isRecording ? styles.containerHover : {}),
-  };
-
   const renderContent = () => {
     if (isRecording) {
-      return <span style={styles.recordingText}>Press keys...</span>;
+      return (
+        <span className="text-sm italic" style={{ color: "var(--color-accent)" }}>
+          Press keys...
+        </span>
+      );
     }
 
     if (displayParts.length === 0) {
-      return <span style={styles.placeholder}>{placeholderText}</span>;
+      return (
+        <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+          {placeholderText}
+        </span>
+      );
     }
 
     return (
-      <span style={styles.shortcutDisplay}>
+      <span className="flex items-center gap-1.5">
         {displayParts.map((part) => (
-          <span key={part} style={styles.keyBadge}>
+          <span
+            className="inline-flex min-w-[24px] items-center justify-center rounded px-2 py-0.5 font-semibold text-sm"
+            key={part}
+            style={{
+              backgroundColor: "var(--color-surface-tertiary)",
+              color: "var(--color-text-primary)",
+            }}
+          >
             {part}
           </span>
         ))}
       </span>
     );
+  };
+
+  const getStateStyles = () => {
+    if (isRecording) {
+      return {
+        borderColor: "var(--color-accent)",
+        backgroundColor: "rgba(124, 58, 237, 0.2)",
+        boxShadow: "0 0 0 2px rgba(124, 58, 237, 0.3)",
+      };
+    }
+    if (isHovered) {
+      return {
+        borderColor: "var(--color-text-muted)",
+        backgroundColor: "var(--color-surface-tertiary)",
+      };
+    }
+    return {
+      borderColor: "var(--color-border)",
+      backgroundColor: "var(--color-surface-secondary)",
+    };
   };
 
   return (
@@ -174,12 +134,13 @@ export function HotkeyRecorder({ value, onChange, placeholder }: HotkeyRecorderP
           ? "Recording shortcut, press keys or Escape to cancel"
           : `Shortcut: ${displayValue || "not set"}. Click to record new shortcut`
       }
+      className="inline-flex min-w-[120px] items-center justify-center rounded-lg border px-4 py-2 outline-none transition-all"
       onClick={startRecording}
       onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       ref={buttonRef}
-      style={containerStyle}
+      style={getStateStyles()}
       type="button"
     >
       {renderContent()}

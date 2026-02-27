@@ -9,7 +9,7 @@ import ora from "ora";
 export const captureCommand = new Command("capture")
   .description("Capture LLM calls from your application")
   .option("-o, --output <path>", "Output directory for traces", "./traces")
-  .option("-e, --endpoint <url>", "Langfuse endpoint", "http://localhost:3000")
+  .option("-e, --endpoint <url>", "Langfuse endpoint", "http://localhost:3213")
   .option("--public-key <key>", "Langfuse public key")
   .option("--secret-key <key>", "Langfuse secret key")
   .action((options) => {
