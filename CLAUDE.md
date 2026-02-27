@@ -132,22 +132,6 @@ The desktop app (`apps/desktop`) is a macOS menu bar app built with:
 - **Vite**: Development server and bundler
 - **Vitest**: Unit testing framework
 
-### Tray Menu Actions
-
-The system tray menu provides:
-
-- **Open Blackbox** (⌘Space) - Opens the main window
-- **Send us Feedback** - Opens GitHub issues page
-- **Manual** - Opens documentation
-- **Troubleshooting** - Opens troubleshooting guide
-- **Join our Community** - Opens Slack/community page
-- **Follow us on X** - Opens Twitter/X profile
-- **Subscribe to our Channel** - Opens YouTube channel
-- **Version info** - Shows current version (disabled)
-- **About Blackbox** - Opens settings to about section
-- **Check for Updates** - Triggers update check
-- **Settings...** (⌘,) - Opens settings window
-- **Quit Blackbox** (⌘Q) - Exits the application
 
 ### Key Files
 
@@ -178,14 +162,3 @@ The system tray menu provides:
 | ClickHouse | 8113  | http://localhost:8113  |
 | Redis      | 6313  | localhost:6313         |
 | MinIO      | 9014  | http://localhost:9014  |
-
-## Testing the Pipeline
-
-```bash
-# Run with example traces (skipping replay for quick test)
-node packages/cli/dist/index.js run \
-  --input examples/capture-agent/traces \
-  --rules examples/capture-agent/CLAUDE.md \
-  --skip-replay \
-  --output ./test-output
-```
