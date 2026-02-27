@@ -325,19 +325,19 @@ pub fn run() {
                 .build(app)?;
 
             let feedback_item =
-                MenuItemBuilder::with_id(config::MENU_FEEDBACK_ID, "Send us Feedback").build(app)?;
+                MenuItemBuilder::with_id(config::MENU_FEEDBACK_ID, "Send us Feedback ↗").build(app)?;
             let manual_item =
-                MenuItemBuilder::with_id(config::MENU_MANUAL_ID, "Manual").build(app)?;
+                MenuItemBuilder::with_id(config::MENU_MANUAL_ID, "Manual ↗").build(app)?;
             let troubleshooting_item =
-                MenuItemBuilder::with_id(config::MENU_TROUBLESHOOTING_ID, "Troubleshooting")
+                MenuItemBuilder::with_id(config::MENU_TROUBLESHOOTING_ID, "Troubleshooting ↗")
                     .build(app)?;
 
-            let slack_item = MenuItemBuilder::with_id(config::MENU_SLACK_ID, "Join our Community")
+            let slack_item = MenuItemBuilder::with_id(config::MENU_SLACK_ID, "Join our Community ↗")
                 .build(app)?;
             let twitter_item =
-                MenuItemBuilder::with_id(config::MENU_TWITTER_ID, "Follow us on X").build(app)?;
+                MenuItemBuilder::with_id(config::MENU_TWITTER_ID, "Follow us on X ↗").build(app)?;
             let youtube_item =
-                MenuItemBuilder::with_id(config::MENU_YOUTUBE_ID, "Subscribe to our Channel")
+                MenuItemBuilder::with_id(config::MENU_YOUTUBE_ID, "Subscribe to our Channel ↗")
                     .build(app)?;
 
             let version_item = MenuItemBuilder::new(format!("Version {}", version))
