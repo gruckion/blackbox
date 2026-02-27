@@ -75,7 +75,7 @@ blackbox/
 │   └── cli/            # Command-line interface
 ├── apps/
 │   └── desktop/        # Tauri desktop menu bar app
-├── example/            # Example traces and CLAUDE.md
+├── examples/           # Example agents, traces, and rules
 └── tests/              # Integration tests
 ```
 

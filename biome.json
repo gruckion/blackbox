@@ -33,6 +33,6 @@
     }
   ],
   "files": {
-    "includes": ["packages/*/src/**", "examples/*/src/**", "tests/**"]
+    "includes": ["packages/*/src/**", "examples/**", "tests/**"]
   }
 }

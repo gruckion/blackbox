@@ -95,7 +95,7 @@ blackbox/
 │   └── cli/            # Command-line interface
 ├── apps/
 │   └── desktop/        # Tauri desktop app (menu bar)
-├── example/            # Example traces and CLAUDE.md
+├── examples/           # Example agents, traces, and rules
 ├── scripts/            # Development/testing scripts
 └── tests/              # Integration tests
 ```
@@ -119,7 +119,7 @@ blackbox/
 - `.env.example` - Environment variable template
 - `packages/*/src/index.ts` - Package entry points
 - `apps/desktop/src-tauri/` - Rust backend for desktop app
-- `example/traces/` - Sample trace files for testing
+- `examples/capture-agent/traces/` - Sample trace files for testing
 
 ## Desktop App Details
 
@@ -184,8 +184,8 @@ The system tray menu provides:
 ```bash
 # Run with example traces (skipping replay for quick test)
 node packages/cli/dist/index.js run \
-  --input example/traces \
-  --rules example/CLAUDE.md \
+  --input examples/capture-agent/traces \
+  --rules examples/capture-agent/CLAUDE.md \
   --skip-replay \
   --output ./test-output
 ```

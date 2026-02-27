@@ -11,17 +11,7 @@
   },
   "app": {
     "withGlobalTauri": true,
-    "windows": [
-      {
-        "label": "main",
-        "title": "Blackbox",
-        "width": 400,
-        "height": 300,
-        "resizable": true,
-        "visible": true,
-        "center": true
-      }
-    ]
+    "windows": []
   },
   "bundle": {
     "active": true,

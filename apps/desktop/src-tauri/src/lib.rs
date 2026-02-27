@@ -485,6 +485,14 @@ pub fn run() {
 
             Ok(())
         })
+        .on_window_event(|window, event| {
+            // Hide windows on close instead of destroying them
+            // This keeps the tray app running in the background
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

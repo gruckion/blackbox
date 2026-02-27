@@ -17,6 +17,7 @@
     "check:fix": "bun x ultracite fix --unsafe",
     "clean": "tsc --build --clean && bun run --filter '*' clean",
     "dev": "bun run --parallel --filter '*' dev",
+    "dev:ui": "bun run --filter @blackbox/desktop tauri:dev",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
