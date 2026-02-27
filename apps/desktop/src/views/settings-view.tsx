@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppearanceToggle } from "../components/settings/appearance-toggle";
 import { HotkeyRecorder } from "../components/settings/hotkey-recorder";
 import { Checkbox, Separator } from "../components/ui";
@@ -205,8 +206,20 @@ function AboutTab() {
   );
 }
 
+const validTabIds = new Set<string>(tabs.map((t) => t.id));
+
+function isValidTabId(value: string | null): value is TabId {
+  return value !== null && validTabIds.has(value);
+}
+
 function SettingsView() {
-  const [activeTab, setActiveTab] = useState<TabId>("general");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab: TabId = isValidTabId(tabParam) ? tabParam : "general";
+
+  const handleTabChange = (id: TabId) => {
+    setSearchParams(id === "general" ? {} : { tab: id });
+  };
 
   return (
     <div className="flex h-screen flex-col" style={{ backgroundColor: "var(--color-surface)" }}>
@@ -219,7 +232,7 @@ function SettingsView() {
           <button
             className="flex flex-col items-center gap-1 rounded-lg px-4 py-2 transition-colors"
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             style={{
               backgroundColor:
                 activeTab === tab.id ? "var(--color-surface-secondary)" : "transparent",

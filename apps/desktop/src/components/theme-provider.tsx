@@ -1,3 +1,4 @@
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { applyTheme, getSystemTheme, resolveTheme, type Theme, ThemeContext } from "../lib/theme";
 
@@ -36,6 +37,11 @@ export function ThemeProvider({
     setResolvedTheme(resolved);
     applyTheme(resolved);
   }, [theme]);
+
+  // Show window after theme is applied (prevents FOUC on new windows)
+  useEffect(() => {
+    getCurrentWindow().show();
+  }, []);
 
   // Listen for system theme changes when using "system" mode
   useEffect(() => {

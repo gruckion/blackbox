@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{
     menu::{Menu, MenuItemBuilder, PredefinedMenuItem},
     tray::TrayIconBuilder,
+    window::Color,
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
 };
 
@@ -263,7 +264,9 @@ fn open_url_helper(app: &tauri::AppHandle, url: &str) {
     let _ = app.opener().open_url(url, None::<&str>);
 }
 
-/// Helper to show or create a window
+/// Helper to show or create a window.
+/// When `navigate` is true and the window already exists, it navigates to the given URL
+/// before showing the window. This is useful for deep-linking to a specific tab.
 fn show_or_create_window(
     app: &tauri::AppHandle,
     label: &str,
@@ -271,14 +274,23 @@ fn show_or_create_window(
     url: &str,
     width: f64,
     height: f64,
+    navigate: bool,
 ) {
     if let Some(window) = app.get_webview_window(label) {
+        if navigate {
+            let _ = window.eval(&format!(
+                "window.location.replace('{}')",
+                url
+            ));
+        }
         let _ = window.show();
         let _ = window.set_focus();
     } else {
         let _ = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
             .title(title)
             .inner_size(width, height)
+            .visible(false)
+            .background_color(Color(0x1a, 0x1a, 0x1a, 0xff))
             .resizable(true)
             .center()
             .build();
@@ -398,6 +410,7 @@ pub fn run() {
                                 "/",
                                 config::WINDOW_WIDTH,
                                 config::WINDOW_HEIGHT,
+                                false,
                             );
                         }
                         MenuAction::Settings => {
@@ -408,20 +421,19 @@ pub fn run() {
                                 "/settings",
                                 config::SETTINGS_WIDTH,
                                 config::SETTINGS_HEIGHT,
+                                false,
                             );
                         }
                         MenuAction::About => {
-                            // For now, open settings to About tab
                             show_or_create_window(
                                 app,
                                 config::SETTINGS_LABEL,
                                 "Settings",
-                                "/settings",
+                                "/settings?tab=about",
                                 config::SETTINGS_WIDTH,
                                 config::SETTINGS_HEIGHT,
+                                true,
                             );
-                            // Emit event to switch to about tab
-                            let _ = app.emit("navigate-to-about", ());
                         }
                         MenuAction::CheckUpdates => {
                             // TODO: Implement update checking
@@ -466,6 +478,8 @@ pub fn run() {
                                         )
                                         .title(config::WINDOW_TITLE)
                                         .inner_size(config::WINDOW_WIDTH, config::WINDOW_HEIGHT)
+                                        .visible(false)
+                                        .background_color(Color(0x1a, 0x1a, 0x1a, 0xff))
                                         .resizable(true)
                                         .center()
                                         .build();
